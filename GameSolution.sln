@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ECS", "ECS\ECS.csproj", "{E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Matchmaker", "Matchmaker\Matchmaker.csproj", "{AB3018A0-B222-4AA8-9B12-1271916BB99B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthorizationService", "AuthorizationService\AuthorizationService.csproj", "{08E5959E-C672-4C35-8BEA-6621C2F6B595}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthorizationService", "AuthorizationService\AuthorizationService.csproj", "{08E5959E-C672-4C35-8BEA-6621C2F6B595}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

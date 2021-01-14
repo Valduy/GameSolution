@@ -30,6 +30,14 @@ namespace AuthorizationService
                 app.UseDeveloperExceptionPage();
             }
 
+            //app.UseCors(policy =>
+            //{
+            //    policy.AllowAnyHeader();
+            //    policy.AllowAnyMethod();
+            //    policy.AllowAnyOrigin();
+            //    policy.AllowCredentials();
+            //});
+
             app.UseSession();
             app.UseMvc();
         }
