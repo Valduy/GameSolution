@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Matchmaker", "Matchmaker\Ma
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthorizationService", "AuthorizationService\AuthorizationService.csproj", "{08E5959E-C672-4C35-8BEA-6621C2F6B595}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchmakerModels", "MatchmakerModels\MatchmakerModels.csproj", "{F2742A9A-413F-4C4A-8AF9-0078A777C411}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{08E5959E-C672-4C35-8BEA-6621C2F6B595}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08E5959E-C672-4C35-8BEA-6621C2F6B595}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08E5959E-C672-4C35-8BEA-6621C2F6B595}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2742A9A-413F-4C4A-8AF9-0078A777C411}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2742A9A-413F-4C4A-8AF9-0078A777C411}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2742A9A-413F-4C4A-8AF9-0078A777C411}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2742A9A-413F-4C4A-8AF9-0078A777C411}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

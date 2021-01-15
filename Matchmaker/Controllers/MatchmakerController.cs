@@ -17,25 +17,21 @@ namespace Matchmaker.Controllers
             _authorizationService = authorizationService;
         }
 
-        [HttpGet("queue")]
-        public IActionResult Queue()
+        [HttpGet("Enqueue")]
+        public IActionResult Enqueue()
         {
             if (!_authorizationService.CheckAuthorization(HttpContext))
             {
                 return Unauthorized();
             }
 
+            var identifier = _authorizationService.GetIdentifier(HttpContext);
+            // TODO: постановка клиента в очередь
             return Ok();
         }
 
         [HttpGet("status")]
         public IActionResult Status()
-        {
-            return Ok();
-        }
-
-        [HttpGet("test")]
-        public IActionResult Test()
         {
             if (!_authorizationService.CheckAuthorization(HttpContext))
             {
