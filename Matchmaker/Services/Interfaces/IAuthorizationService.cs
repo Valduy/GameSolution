@@ -8,6 +8,8 @@ namespace Matchmaker.Services.Interfaces
 {
     public interface IAuthorizationService
     {
-        Task<bool> CheckAuthorizationAsync(HttpContext context);
+        void Authorize(HttpContext context);
+        bool CheckAuthorization(HttpContext context);
+        string GetIdentifier(HttpContext context);
     }
 }

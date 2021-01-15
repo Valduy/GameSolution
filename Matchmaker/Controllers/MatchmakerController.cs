@@ -18,14 +18,31 @@ namespace Matchmaker.Controllers
         }
 
         [HttpGet("queue")]
-        public async Task<IActionResult> Queue()
+        public IActionResult Queue()
         {
-            if (await _authorizationService.CheckAuthorizationAsync(HttpContext))
+            if (!_authorizationService.CheckAuthorization(HttpContext))
             {
-                return Ok();
+                return Unauthorized();
             }
-            
-            return Unauthorized();
+
+            return Ok();
+        }
+
+        [HttpGet("status")]
+        public IActionResult Status()
+        {
+            return Ok();
+        }
+
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            if (!_authorizationService.CheckAuthorization(HttpContext))
+            {
+                return Unauthorized();
+            }
+
+            return Ok();
         }
     }
 }
