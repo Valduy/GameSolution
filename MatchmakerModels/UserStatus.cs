@@ -2,7 +2,7 @@
 {
     public enum UserStatus
     {
-        Enqueued,
+        Wait,
         Connected,
         Ignored,
     }

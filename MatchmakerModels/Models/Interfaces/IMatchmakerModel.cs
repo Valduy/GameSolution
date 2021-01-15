@@ -4,6 +4,6 @@
     {
         bool Enqueue(string userId);
         UserStatus GetStatus(string userId);
-        uint? GetMatch(string userId);
+        int? GetMatch(string userId);
     }
 }

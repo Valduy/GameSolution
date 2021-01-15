@@ -11,7 +11,8 @@ namespace MatchmakerModels.Models.Implementations
         private bool _disposed = false;
         private Task _matchmakerTask;
 
-        private List<QueuedPlayer> _enqueued = new List<QueuedPlayer>();
+        private readonly Queue<QueuedPlayer> _waitingPlayers = new Queue<QueuedPlayer>();
+        private Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
 
         public MatchmakerModel()
         {
@@ -20,23 +21,51 @@ namespace MatchmakerModels.Models.Implementations
 
         public bool Enqueue(string userId)
         {
-            if (_enqueued.Any(o => o.Id == userId))
+            lock (_waitingPlayers)
             {
-                return false;
-            }
+                if (_waitingPlayers.Any(o => o.Id == userId))
+                {
+                    return false;
+                }
 
-            _enqueued.Add(new QueuedPlayer(userId));
-            return true;
+                _waitingPlayers.Enqueue(new QueuedPlayer(userId));
+                return true;
+            }
         }
 
         public UserStatus GetStatus(string userId)
         {
-            throw new NotImplementedException();
+            lock (_waitingPlayers)
+            {
+                if (_waitingPlayers.Any(o => o.Id == userId))
+                {
+                    return UserStatus.Wait;
+                }
+            }
+
+            lock (_playerToMatch)
+            {
+                if (_playerToMatch.ContainsKey(userId))
+                {
+                    return UserStatus.Connected;
+                }
+            }
+
+            return UserStatus.Ignored;
         }
 
-        public uint? GetMatch(string userId)
+        public int? GetMatch(string userId)
         {
-            throw new NotImplementedException();
+            lock (_playerToMatch)
+            {
+                if (_playerToMatch.TryGetValue(userId, out var port))
+                {
+                    _playerToMatch.Remove(userId);
+                    return port;
+                }
+
+                return null;
+            }
         }
 
         public void Dispose()
