@@ -5,5 +5,6 @@
         bool Enqueue(string userId);
         UserStatus GetStatus(string userId);
         int? GetMatch(string userId);
+        void Remove(string userId);
     }
 }

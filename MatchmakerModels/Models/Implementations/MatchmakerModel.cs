@@ -11,7 +11,7 @@ namespace MatchmakerModels.Models.Implementations
         private bool _disposed = false;
         private Task _matchmakerTask;
 
-        private readonly Queue<QueuedPlayer> _waitingPlayers = new Queue<QueuedPlayer>();
+        private readonly List<string> _waitingPlayers = new List<string>();
         private Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
 
         public MatchmakerModel()
@@ -19,16 +19,21 @@ namespace MatchmakerModels.Models.Implementations
 
         }
 
+        ~MatchmakerModel()
+        {
+            Dispose(false);
+        }
+
         public bool Enqueue(string userId)
         {
             lock (_waitingPlayers)
             {
-                if (_waitingPlayers.Any(o => o.Id == userId))
+                if (_waitingPlayers.Any(o => o == userId))
                 {
                     return false;
                 }
 
-                _waitingPlayers.Enqueue(new QueuedPlayer(userId));
+                _waitingPlayers.Add(userId);
                 return true;
             }
         }
@@ -37,7 +42,7 @@ namespace MatchmakerModels.Models.Implementations
         {
             lock (_waitingPlayers)
             {
-                if (_waitingPlayers.Any(o => o.Id == userId))
+                if (_waitingPlayers.Any(o => o == userId))
                 {
                     return UserStatus.Wait;
                 }
@@ -68,6 +73,19 @@ namespace MatchmakerModels.Models.Implementations
             }
         }
 
+        public void Remove(string userId)
+        {
+            lock (_waitingPlayers)
+            {
+                var id = _waitingPlayers.FirstOrDefault(o => o == userId);
+
+                if (id != null)
+                {
+                    _waitingPlayers.Remove(id);
+                }
+            }
+        }
+
         public void Dispose()
         {
             Dispose(true);
@@ -83,9 +101,9 @@ namespace MatchmakerModels.Models.Implementations
             _disposed = true;
         }
 
-        ~MatchmakerModel()
+        private async Task ManageMatchmakingAsync()
         {
-            Dispose(false);
+
         }
     }
 }
