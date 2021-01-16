@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Matchmaker.Services.Interfaces;
+using MatchmakerModels.Models.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Matchmaker.Controllers
@@ -10,35 +11,46 @@ namespace Matchmaker.Controllers
     [Route("api/[controller]")]
     public class MatchmakerController : Controller
     {
-        private IAuthorizationService _authorizationService;
+        private readonly IAuthorizationService _authorizationService;
+        private readonly IMatchmakerModel _matchmakerModel;
 
-        public MatchmakerController(IAuthorizationService authorizationService)
+        public MatchmakerController(
+            IAuthorizationService authorizationService,
+            IMatchmakerModel matchmakerModel)
         {
             _authorizationService = authorizationService;
+            _matchmakerModel = matchmakerModel;
         }
 
-        [HttpGet("Enqueue")]
+        [HttpGet("enqueue")]
         public IActionResult Enqueue()
         {
-            if (!_authorizationService.CheckAuthorization(HttpContext))
-            {
-                return Unauthorized();
-            }
-
-            var identifier = _authorizationService.GetIdentifier(HttpContext);
-            // TODO: постановка клиента в очередь
-            return Ok();
+            return OkOnAuthorized(() => _matchmakerModel.Enqueue(_authorizationService.GetIdentifier(HttpContext)));
         }
 
-        [HttpGet("status")]
-        public IActionResult Status()
+        [HttpGet("status/get")]
+        public IActionResult GetStatus()
         {
-            if (!_authorizationService.CheckAuthorization(HttpContext))
-            {
-                return Unauthorized();
-            }
+            return OkOnAuthorized(() => _matchmakerModel.GetStatus(_authorizationService.GetIdentifier(HttpContext)));
+        }
 
-            return Ok();
+        [HttpGet("match/get")]
+        public IActionResult GetMatch()
+        {
+            return OkOnAuthorized(() => _matchmakerModel.GetMatch(_authorizationService.GetIdentifier(HttpContext)));
+        }
+
+        [HttpGet("remove")]
+        public IActionResult Remove()
+        {
+            return OkOnAuthorized(() => _matchmakerModel.Remove(_authorizationService.GetIdentifier(HttpContext)));
+        }
+
+        private IActionResult OkOnAuthorized(Func<object> func)
+        {
+            return _authorizationService.CheckAuthorization(HttpContext) 
+                ? (IActionResult)Ok(func?.Invoke()) 
+                : Unauthorized();
         }
     }
 }

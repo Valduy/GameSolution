@@ -8,4 +8,8 @@
     <Folder Include="ViewModels\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MatchmakerModels\MatchmakerModels.csproj" />
+  </ItemGroup>
+
 </Project>

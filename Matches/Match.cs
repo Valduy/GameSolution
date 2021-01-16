@@ -18,8 +18,8 @@ namespace Matches
         public int Port { get; }
         public long TimeForStarting { get; set; } = 30000;
 
-        public event Action Started;
-        public event Action Ended;
+        public event Action<IMatch> Started;
+        public event Action<IMatch> Ended;
 
         public Match()
         {
@@ -33,11 +33,11 @@ namespace Matches
             {
                 if (await WaitForPlayersAsync())
                 {
-                    Started?.Invoke();
+                    Started?.Invoke(this);
                     await MatchLoopAsync();
                 }
 
-                Ended?.Invoke();
+                Ended?.Invoke(this);
             });
         }
 
@@ -46,11 +46,16 @@ namespace Matches
             // TODO: Остановить матч
         }
 
+        /// <summary>
+        /// Метод ожидает игроков, готовых присоединиться к матчу.
+        /// </summary>
+        /// <returns>true, если игроков достаточно для создания матча, false в противном случае.</returns>
         private async Task<bool> WaitForPlayersAsync()
         {
             var timer = new Stopwatch();
             timer.Start();
 
+            // TODO: использовать игровой цикл.
             while (timer.ElapsedMilliseconds < TimeForStarting || _players.Count == PlayersCount)
             {
                 if (_udpClient.Available > 0)

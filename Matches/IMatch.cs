@@ -9,7 +9,7 @@ namespace Matches
         int Port { get; }
         long TimeForStarting { get; set; }
 
-        event Action Started;
-        event Action Ended;
+        event Action<IMatch> Started;
+        event Action<IMatch> Ended;
     }
 }

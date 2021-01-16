@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Matches;
 using MatchmakerModels.Models.Interfaces;
 
 namespace MatchmakerModels.Models.Implementations
@@ -12,11 +13,12 @@ namespace MatchmakerModels.Models.Implementations
         private Task _matchmakerTask;
 
         private readonly List<string> _waitingPlayers = new List<string>();
-        private Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
+        private readonly List<IMatch> _matches = new List<IMatch>();
+        private readonly Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
 
         public MatchmakerModel()
         {
-
+            _matchmakerTask = Task.Run(ManageMatchmaking);
         }
 
         ~MatchmakerModel()
@@ -44,7 +46,7 @@ namespace MatchmakerModels.Models.Implementations
             {
                 if (_waitingPlayers.Any(o => o == userId))
                 {
-                    return UserStatus.Wait;
+                    return UserStatus.Waited;
                 }
             }
 
@@ -56,7 +58,7 @@ namespace MatchmakerModels.Models.Implementations
                 }
             }
 
-            return UserStatus.Ignored;
+            return UserStatus.Absented;
         }
 
         public int? GetMatch(string userId)
@@ -73,16 +75,14 @@ namespace MatchmakerModels.Models.Implementations
             }
         }
 
-        public void Remove(string userId)
+        public bool Remove(string userId)
         {
             lock (_waitingPlayers)
             {
                 var id = _waitingPlayers.FirstOrDefault(o => o == userId);
-
-                if (id != null)
-                {
-                    _waitingPlayers.Remove(id);
-                }
+                if (id == null) return false;
+                _waitingPlayers.Remove(id);
+                return true;
             }
         }
 
@@ -98,12 +98,61 @@ namespace MatchmakerModels.Models.Implementations
             if (disposing) { }
 
             // TODO: прервать таск матчмейкинга
+            // TODO: прервать матчи
             _disposed = true;
         }
 
-        private async Task ManageMatchmakingAsync()
+        private void ManageMatchmaking()
         {
+            // TODO: использовать игровой цикл
+            while (true)
+            {
+                TryCreateMatch();
+            }
+        }
 
+        private bool TryCreateMatch()
+        {
+            lock (_waitingPlayers)
+            {
+                if (_waitingPlayers.Count >= Match.PlayersCount)
+                {
+                    var match = new Match();
+                    match.Started += OnMatchStarted;
+                    match.Ended += OnMatchEnded;
+
+                    for (int i = 0; i < Match.PlayersCount; i++)
+                    {
+                        var player = _waitingPlayers.Last();
+                        _playerToMatch[player] = match.Port;
+                        _waitingPlayers.Remove(player);
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        private void OnMatchStarted(IMatch match)
+        {
+            lock (_playerToMatch)
+            {
+                var latePlayers = _playerToMatch
+                    .Where(o => o.Value == match.Port)
+                    .Select(o => o.Key);
+
+                foreach (var player in latePlayers)
+                {
+                    _playerToMatch.Remove(player);
+                }
+            }
+        }
+
+        private void OnMatchEnded(IMatch match)
+        {
+            _matches.Remove(match);
         }
     }
 }

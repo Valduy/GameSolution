@@ -1,9 +1,15 @@
 ﻿namespace MatchmakerModels
 {
+    /// <summary>
+    /// Возможные статусы ползьзователя.
+    /// </summary>
     public enum UserStatus
     {
-        Wait,
+        /// <summary>В очереди.</summary>
+        Waited,
+        /// <summary>Присоединен к матчу.</summary>
         Connected,
-        Ignored,
+        /// <summary>Отсутствует.</summary>
+        Absented,
     }
 }
