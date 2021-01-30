@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ECS
@@ -9,44 +10,45 @@ namespace ECS
     public class GameLoop
     {
         private readonly Action<double> _gameFrame;
-        private readonly long _DT;
+        private readonly long _dt;
         private readonly double _frame;
 
-        private bool _isRun;
+        private CancellationTokenSource _token;
         private Task _gameTask;
 
-        public GameLoop(Action<double> gameFrame, uint framesPerSeconds)
+        public GameLoop(Action<double> gameFrame, uint fps)
         {
             _gameFrame = gameFrame;
-            _DT = 1000 / framesPerSeconds;
-            _frame = (double)_DT / 1000;
+            _dt = 1000 / fps;
+            _frame = (double)_dt / 1000;
         }
 
         public void Start()
         {
+            _token = new CancellationTokenSource();
+
             _gameTask = Task.Run(() =>
             {
-                _isRun = true;
                 var timer = new Stopwatch();
                 timer.Start();
 
-                while (_isRun)
+                while (!_token.IsCancellationRequested)
                 {
                     var accumulator = timer.ElapsedMilliseconds;
 
-                    if (accumulator >= _DT)
+                    if (accumulator >= _dt)
                     {
                         timer.Restart();
                     }
 
-                    if (accumulator > 3 * _DT)
+                    if (accumulator > 3 * _dt)
                     {
-                        accumulator = 3 * _DT;
+                        accumulator = 3 * _dt;
                     }
 
-                    while (accumulator >= _DT)
+                    while (accumulator >= _dt)
                     {
-                        accumulator -= _DT;
+                        accumulator -= _dt;
                         _gameFrame(_frame);
                     }
                 }
@@ -55,8 +57,10 @@ namespace ECS
 
         public void Stop()
         {
-            _isRun = false;
+            _token.Cancel();
             _gameTask.Wait();
+            _gameTask = null;
+            _token = null;
         }
     }
 }

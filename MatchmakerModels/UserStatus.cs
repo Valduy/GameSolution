@@ -6,10 +6,10 @@
     public enum UserStatus
     {
         /// <summary>В очереди.</summary>
-        Waited,
+        Wait,
         /// <summary>Присоединен к матчу.</summary>
         Connected,
         /// <summary>Отсутствует.</summary>
-        Absented,
+        Absent,
     }
 }
