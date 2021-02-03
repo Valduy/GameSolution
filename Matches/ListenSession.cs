@@ -8,20 +8,20 @@ using System.Threading.Tasks;
 
 namespace Matches
 {
-    public class Match : IMatch
+    public class ListenSession : IMatch
     {
         private UdpClient _udpClient;
         private Task _matchTask;
         private List<IPEndPoint> _players;
 
-        public static int PlayersCount => 4;
+        public static int PlayersCount => 2;
         public int Port { get; }
         public long TimeForStarting { get; set; } = 30000;
 
         public event Action<IMatch> Started;
         public event Action<IMatch> Ended;
 
-        public Match()
+        public ListenSession()
         {
             _udpClient = new UdpClient(0);
             Port = ((IPEndPoint)_udpClient.Client.LocalEndPoint).Port;
@@ -56,7 +56,7 @@ namespace Matches
             timer.Start();
 
             // TODO: использовать игровой цикл.
-            while (timer.ElapsedMilliseconds < TimeForStarting || _players.Count == PlayersCount)
+            while (timer.ElapsedMilliseconds < TimeForStarting && _players.Count < PlayersCount)
             {
                 if (_udpClient.Available > 0)
                 {

@@ -46,7 +46,7 @@ namespace MatchmakerModels.Models.Implementations
             {
                 if (_waitingPlayers.Any(o => o == userId))
                 {
-                    return UserStatus.Waited;
+                    return UserStatus.Wait;
                 }
             }
 
@@ -58,7 +58,7 @@ namespace MatchmakerModels.Models.Implementations
                 }
             }
 
-            return UserStatus.Absented;
+            return UserStatus.Absent;
         }
 
         public int? GetMatch(string userId)
@@ -115,13 +115,13 @@ namespace MatchmakerModels.Models.Implementations
         {
             lock (_waitingPlayers)
             {
-                if (_waitingPlayers.Count >= Match.PlayersCount)
+                if (_waitingPlayers.Count >= ListenSession.PlayersCount)
                 {
-                    var match = new Match();
+                    var match = new ListenSession();
                     match.Started += OnMatchStarted;
                     match.Ended += OnMatchEnded;
 
-                    for (int i = 0; i < Match.PlayersCount; i++)
+                    for (int i = 0; i < ListenSession.PlayersCount; i++)
                     {
                         var player = _waitingPlayers.Last();
                         _playerToMatch[player] = match.Port;
