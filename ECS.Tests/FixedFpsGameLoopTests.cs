@@ -2,17 +2,18 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using GameLoops;
 
 namespace ECS.Tests
 {
-    public class GameLoopTests
+    public class FixedFpsGameLoopTests
     {
         [Fact]
         public void FpsFact()
         {
             uint fps = 60;
             double actualFps = 0;
-            var gameLoop = new GameLoop((dt) => actualFps++, fps);
+            var gameLoop = new FixedFpsGameLoop((dt) => actualFps++, fps);
 
             var task = Task.Run(async () =>
             {

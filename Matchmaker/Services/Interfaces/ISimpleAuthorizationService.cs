@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Matchmaker.Services.Interfaces
 {
-    public interface IAuthorizationService
+    public interface ISimpleAuthorizationService
     {
         void Authorize(HttpContext context);
         bool CheckAuthorization(HttpContext context);

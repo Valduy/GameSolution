@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ECS
+namespace GameLoops
 {
-    public class GameLoop
+    public class FixedFpsGameLoop
     {
         private readonly Action<double> _gameFrame;
         private readonly long _dt;
@@ -16,7 +14,7 @@ namespace ECS
         private CancellationTokenSource _token;
         private Task _gameTask;
 
-        public GameLoop(Action<double> gameFrame, uint fps)
+        public FixedFpsGameLoop(Action<double> gameFrame, uint fps)
         {
             _gameFrame = gameFrame;
             _dt = 1000 / fps;

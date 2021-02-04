@@ -12,17 +12,14 @@ namespace Matchmaker.Controllers
     [Route("api/[controller]")]
     public class AuthorizationController : Controller
     {
-        private IAuthorizationService _authorizationService;
+        private readonly ISimpleAuthorizationService _authorizationService;
 
-        public AuthorizationController(IAuthorizationService authorizationService)
+        public AuthorizationController(ISimpleAuthorizationService authorizationService)
         {
             _authorizationService = authorizationService;
         }
 
         [HttpPost("authorize")]
-        public void Authorize()
-        {
-            _authorizationService.Authorize(HttpContext);
-        }
+        public void Authorize() => _authorizationService.Authorize(HttpContext);
     }
 }

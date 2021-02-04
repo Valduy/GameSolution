@@ -4,21 +4,23 @@ using System.Linq;
 using System.Threading.Tasks;
 using Matches;
 using MatchmakerModels.Models.Interfaces;
+using GameLoops;
 
 namespace MatchmakerModels.Models.Implementations
 {
     public class MatchmakerModel : IMatchmakerModel, IDisposable
     {
-        private bool _disposed = false;
-        private Task _matchmakerTask;
-
+        private readonly FixedFpsGameLoop _matchmakingLoop;
+        
         private readonly List<string> _waitingPlayers = new List<string>();
         private readonly List<IMatch> _matches = new List<IMatch>();
         private readonly Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
 
+        private bool _disposed;
+
         public MatchmakerModel()
         {
-            _matchmakerTask = Task.Run(ManageMatchmaking);
+            _matchmakingLoop = new FixedFpsGameLoop(ManageMatchmaking, 60);
         }
 
         ~MatchmakerModel()
@@ -97,21 +99,12 @@ namespace MatchmakerModels.Models.Implementations
             if (_disposed) return;
             if (disposing) { }
 
-            // TODO: прервать таск матчмейкинга
+            _matchmakingLoop.Stop();
             // TODO: прервать матчи
             _disposed = true;
         }
 
-        private void ManageMatchmaking()
-        {
-            // TODO: использовать игровой цикл
-            while (true)
-            {
-                TryCreateMatch();
-            }
-        }
-
-        private bool TryCreateMatch()
+        private void ManageMatchmaking(double dt)
         {
             lock (_waitingPlayers)
             {
@@ -127,11 +120,7 @@ namespace MatchmakerModels.Models.Implementations
                         _playerToMatch[player] = match.Port;
                         _waitingPlayers.Remove(player);
                     }
-
-                    return true;
                 }
-
-                return false;
             }
         }
 

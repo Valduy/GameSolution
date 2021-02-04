@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ECS\ECS.csproj" />
+    <ProjectReference Include="..\Matchmaker\Matchmaker.csproj" />
   </ItemGroup>
 
 </Project>

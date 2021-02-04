@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Matchmaker.Services.Implementations
 {
-    public class SimpleAuthorizationService : IAuthorizationService
+    public class SimpleAuthorizationService : ISimpleAuthorizationService
     {
         public void Authorize(HttpContext context) => context.Session.SetString("role", "player");
         public bool CheckAuthorization(HttpContext context) => context.Session.Keys.Contains("role");
