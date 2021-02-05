@@ -56,6 +56,8 @@ namespace FakeClient
                         message = JsonSerializer.Deserialize<ConnectionMessage>(MessageHelper.ToString(response));
                         Console.WriteLine("Server has answer!");
                         Console.WriteLine($"My role is {message.Role}!");
+                        var buffer = MessageHelper.GetMessage(NetworkMessages.Info);
+                        _udpClient.Send(buffer, buffer.Length, _serverIp, _serverPort);
                         break;
                     }
                 }

@@ -82,23 +82,26 @@ namespace Matches
             {
                 var player = await _udpClient.ReceiveAsync();
 
-                if (_host == null)
+                if (MessageHelper.GetMessageType(player.Buffer) == NetworkMessages.Hello)
                 {
-                    _host = player.RemoteEndPoint;
-                    _hostMessage = JsonSerializer.Serialize(new ConnectionMessage { Role = Role.Host });
-                    _clientMessage = JsonSerializer.Serialize(new ConnectionMessage
+                    if (_host == null)
                     {
-                        Role = Role.Client,
-                        Ip = _host.Address.ToString(),
-                        Port = _host.Port
-                    });
+                        _host = player.RemoteEndPoint;
+                        _hostMessage = JsonSerializer.Serialize(new ConnectionMessage { Role = Role.Host });
+                        _clientMessage = JsonSerializer.Serialize(new ConnectionMessage
+                        {
+                            Role = Role.Client,
+                            Ip = _host.Address.ToString(),
+                            Port = _host.Port
+                        });
+                    }
+
+                    var message = Equals(player.RemoteEndPoint, _host)
+                        ? MessageHelper.GetMessage(NetworkMessages.Hello, _hostMessage)
+                        : MessageHelper.GetMessage(NetworkMessages.Hello, _clientMessage);
+
+                    await _udpClient.SendAsync(message, message.Length, player.RemoteEndPoint);
                 }
-
-                var message = Equals(player.RemoteEndPoint, _host)
-                    ? MessageHelper.GetMessage(NetworkMessages.Hello, _hostMessage)
-                    : MessageHelper.GetMessage(NetworkMessages.Hello, _clientMessage);
-
-                await _udpClient.SendAsync(message, message.Length, player.RemoteEndPoint);
             }
         }
     }
