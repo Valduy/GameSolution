@@ -11,8 +11,8 @@ namespace GameLoops
         private readonly long _dt;
         private readonly double _frame;
 
-        private CancellationTokenSource _token;
-        private Task _gameTask;
+        private CancellationTokenSource _tokenSource;
+        private CancellationToken _token;
 
         public FixedFpsGameLoop(Action<double> gameFrame, uint fps)
         {
@@ -23,9 +23,10 @@ namespace GameLoops
 
         public void Start()
         {
-            _token = new CancellationTokenSource();
+            _tokenSource = new CancellationTokenSource();
+            _token = _tokenSource.Token;
 
-            _gameTask = Task.Run(() =>
+            Task.Run(() =>
             {
                 var timer = new Stopwatch();
                 timer.Start();
@@ -50,15 +51,13 @@ namespace GameLoops
                         _gameFrame(_frame);
                     }
                 }
-            });
+            }, _token);
         }
 
         public void Stop()
         {
-            _token.Cancel();
-            _gameTask.Wait();
-            _gameTask = null;
-            _token = null;
+            _tokenSource?.Cancel();
+            _tokenSource = null;
         }
     }
 }

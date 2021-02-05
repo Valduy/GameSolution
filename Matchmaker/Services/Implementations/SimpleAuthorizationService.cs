@@ -5,10 +5,9 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using Matchmaker.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 
-namespace Matchmaker.Services.Implementations
+namespace Matchmaker.Services
 {
     public class SimpleAuthorizationService : ISimpleAuthorizationService
     {

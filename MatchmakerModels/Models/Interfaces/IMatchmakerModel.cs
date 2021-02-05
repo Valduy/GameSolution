@@ -1,4 +1,4 @@
-﻿namespace MatchmakerModels.Models.Interfaces
+﻿namespace MatchmakerModels.Models
 {
     /// <summary>
     /// Интерфейс простого матчмейкера.

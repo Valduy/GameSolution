@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Matchmaker.Services.Implementations;
-using Matchmaker.Services.Interfaces;
+using Matchmaker.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -22,7 +22,7 @@ namespace Matchmaker
             services.AddMvc(mvcOptions => mvcOptions.EnableEndpointRouting = false)
                 .SetCompatibilityVersion(CompatibilityVersion.Latest);
 
-            services.AddScoped<IAuthorizationService, SimpleAuthorizationService>();
+            services.AddScoped<ISimpleAuthorizationService, SimpleAuthorizationService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

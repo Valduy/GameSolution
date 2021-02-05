@@ -3,24 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Matches;
-using MatchmakerModels.Models.Interfaces;
+using MatchmakerModels.Models;
 using GameLoops;
 
-namespace MatchmakerModels.Models.Implementations
+namespace MatchmakerModels.Models
 {
-    public class MatchmakerModel : IMatchmakerModel, IDisposable
+    public class MatchmakerModel<TMatch> : IMatchmakerModel, IDisposable where TMatch : MatchBase, new()
     {
         private readonly FixedFpsGameLoop _matchmakingLoop;
         
         private readonly List<string> _waitingPlayers = new List<string>();
-        private readonly List<IMatch> _matches = new List<IMatch>();
+        private readonly List<MatchBase> _matches = new List<MatchBase>();
         private readonly Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
 
         private bool _disposed;
 
-        public MatchmakerModel()
+        public int PlayersPerMatch { get; }
+
+        public MatchmakerModel(int playersPerMatch)
         {
+            PlayersPerMatch = playersPerMatch;
             _matchmakingLoop = new FixedFpsGameLoop(ManageMatchmaking, 60);
+            _matchmakingLoop.Start();
         }
 
         ~MatchmakerModel()
@@ -100,7 +104,12 @@ namespace MatchmakerModels.Models.Implementations
             if (disposing) { }
 
             _matchmakingLoop.Stop();
-            // TODO: прервать матчи
+
+            foreach (var match in _matches)
+            {
+                match.Stop();
+            }
+
             _disposed = true;
         }
 
@@ -108,13 +117,14 @@ namespace MatchmakerModels.Models.Implementations
         {
             lock (_waitingPlayers)
             {
-                if (_waitingPlayers.Count >= ListenSession.PlayersCount)
+                if (_waitingPlayers.Count >= PlayersPerMatch)
                 {
-                    var match = new ListenSession();
+                    var match = new TMatch();
                     match.Started += OnMatchStarted;
                     match.Ended += OnMatchEnded;
+                    match.Start();
 
-                    for (int i = 0; i < ListenSession.PlayersCount; i++)
+                    for (int i = 0; i < PlayersPerMatch; i++)
                     {
                         var player = _waitingPlayers.Last();
                         _playerToMatch[player] = match.Port;
@@ -124,24 +134,24 @@ namespace MatchmakerModels.Models.Implementations
             }
         }
 
-        private void OnMatchStarted(IMatch match)
+        private void OnMatchStarted(MatchBase matchBase)
         {
             lock (_playerToMatch)
             {
-                var latePlayers = _playerToMatch
-                    .Where(o => o.Value == match.Port)
+                var matchPlayers = _playerToMatch
+                    .Where(o => o.Value == matchBase.Port)
                     .Select(o => o.Key);
 
-                foreach (var player in latePlayers)
+                foreach (var player in matchPlayers)
                 {
                     _playerToMatch.Remove(player);
                 }
             }
         }
 
-        private void OnMatchEnded(IMatch match)
+        private void OnMatchEnded(MatchBase matchBase)
         {
-            _matches.Remove(match);
+            _matches.Remove(matchBase);
         }
     }
 }
