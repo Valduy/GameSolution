@@ -30,7 +30,6 @@ namespace FakeClient
         private static void ConnectWithServer()
         {
             var helloMessage = MessageHelper.GetMessage(NetworkMessages.Hello);
-
             IPEndPoint ip = null;
             Console.WriteLine("Let's wait server responce...");
 
@@ -63,7 +62,8 @@ namespace FakeClient
                         }
                     }
                 }
-                
+
+                _udpClient.Send(helloMessage, helloMessage.Length, _serverIp, _serverPort);
                 Thread.Sleep(1000);
             }
         }
@@ -132,7 +132,7 @@ namespace FakeClient
 
                     foreach (var c in clients)
                     {
-                        _udpClient.Send(connectMessage, connectMessage.Length, ip);
+                        _udpClient.Send(connectMessage, connectMessage.Length, c.Ip, c.Port);
                     }
                 }
 

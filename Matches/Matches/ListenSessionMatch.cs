@@ -12,10 +12,11 @@ namespace Matches.Matches
 {
     public class ListenSessionMatch : MatchBase
     {
+        private readonly UdpClient _udpClient;
+
         private List<IPEndPoint> _clients;
         private IPEndPoint _host;
         private FixedFpsGameLoop _connectionLoop;
-        private UdpClient _udpClient;
         private Stopwatch _timer;
 
         public IReadOnlyList<IPEndPoint> Clients => _clients;
@@ -38,7 +39,10 @@ namespace Matches.Matches
         {
             base.Start();
             State = new WaitClientState(this);
+            _clients = new List<IPEndPoint>();
+            _timer = new Stopwatch();
             _connectionLoop = new FixedFpsGameLoop(ConnectionLoopFrame, 30);
+            _timer.Start();
             _connectionLoop.Start();
         }
 

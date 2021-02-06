@@ -2,8 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Matchmaker.Controllers;
-using Matchmaker.Services.Implementations;
-using Matchmaker.Services.Interfaces;
+using Matchmaker.Services;
 using Xunit;
 
 namespace Matchmaker.Tests
