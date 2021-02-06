@@ -2,7 +2,7 @@
   "profiles": {
     "FakeClient": {
       "commandName": "Project",
-      "commandLineArgs": "127.0.0.1 8000"
+      "commandLineArgs": "37.112.25.61 8000"
     }
   }
 }

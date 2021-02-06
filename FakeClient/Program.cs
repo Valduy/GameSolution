@@ -130,12 +130,12 @@ namespace FakeClient
                         var client = clients.First(o => o.Ip == ip.Address.ToString() && o.Port == ip.Port);
                         clients.Remove(client);
                         _udpClient.Send(connectMessage, connectMessage.Length, ip);
-                    }
+                    }                    
+                }
 
-                    foreach (var c in clients)
-                    {
-                        _udpClient.Send(connectMessage, connectMessage.Length, c.Ip, c.Port);
-                    }
+                foreach (var c in clients)
+                {
+                    _udpClient.Send(connectMessage, connectMessage.Length, c.Ip, c.Port);
                 }
 
                 Thread.Sleep(1000);
@@ -198,6 +198,7 @@ namespace FakeClient
                     }
                 }
 
+                _udpClient.Send(connectMessage, connectMessage.Length, clientMessage.Ip, clientMessage.Port);
                 Thread.Sleep(1000);
             }
         }
