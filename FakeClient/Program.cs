@@ -108,6 +108,8 @@ namespace FakeClient
                             break;
                     }
                 }
+
+                Thread.Sleep(1000);
             }
         }
 
@@ -170,6 +172,8 @@ namespace FakeClient
                             break;
                     }
                 }
+
+                Thread.Sleep(1000);
             }
         }
 
