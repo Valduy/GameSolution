@@ -4,11 +4,8 @@ using System.Text;
 
 namespace Matches.Messages
 {
-    
-
-    public class ConnectionMessage
+    public class ClientMessage
     {
-        public Role Role { get; set; }
         public string Ip { get; set; }
         public int Port { get; set; }
     }

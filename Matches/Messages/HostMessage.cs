@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace Matches.Messages
 {
-    public enum Role
+    public class HostMessage
     {
-        Host,
-        Client,
+        public List<ClientMessage> Clients { get; set; }
     }
 }
