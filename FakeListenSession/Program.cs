@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Matches;
-using Matches.Matches;
 
 namespace FakeListenSession
 {
@@ -10,13 +9,13 @@ namespace FakeListenSession
         static async Task Main(string[] args)
         {
             var session = new ListenSessionMatch(2, 120000, int.Parse(args[0]));
-            session.Start();
-
             Console.WriteLine("Fake listen session started!");
 
             await Task.Run(async () =>
             {
-                while (session.IsWork)
+                var task = session.WorkAsync();
+
+                while (!task.IsCompleted)
                 {
                     Console.WriteLine("In progress...");
                     await Task.Delay(1000);

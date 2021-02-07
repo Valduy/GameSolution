@@ -4,20 +4,21 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
-using GameLoops;
-using Matches.Matches.States;
 using Matches.Messages;
+using Matches.States;
+using Network.Messages;
 
-namespace Matches.Matches
+namespace Matches
 {
-    public class ListenSessionMatch : MatchBase
+    public class ListenSessionMatch : MatchBase, IDisposable
     {
         private readonly UdpClient _udpClient;
 
+        private CancellationToken _token;
         private List<ClientEndPoints> _clients;
         private ClientEndPoints _host;
-        private FixedFpsGameLoop _connectionLoop;
         private Stopwatch _timer;
 
         public IReadOnlyList<ClientEndPoints> Clients => _clients;
@@ -36,21 +37,14 @@ namespace Matches.Matches
             Port = ((IPEndPoint)_udpClient.Client.LocalEndPoint).Port;
         }
 
-        public override void Start()
+        public override async Task WorkAsync(CancellationToken token = default)
         {
-            base.Start();
+            _token = token;
             State = new WaitClientState(this);
             _clients = new List<ClientEndPoints>();
             _timer = new Stopwatch();
-            _connectionLoop = new FixedFpsGameLoop(ConnectionLoopFrame, 30);
             _timer.Start();
-            _connectionLoop.Start();
-        }
-
-        public override void Stop()
-        {
-            base.Stop();
-            _connectionLoop.Stop();
+            await ConnectionLoopAsync();
         }
 
         internal void AddClient(ClientEndPoints client) => _clients.Add(client);
@@ -63,21 +57,21 @@ namespace Matches.Matches
             _host = client;
         }
 
-        internal async Task SendMessageAsync(byte[] message, ClientEndPoints client)
-            => await _udpClient.SendAsync(message, message.Length, client.PublicIp, client.PublicPort);
-
         internal async Task SendMessageAsync(byte[] message, IPEndPoint ip)
             => await _udpClient.SendAsync(message, message.Length, ip);
 
-        private async void ConnectionLoopFrame(double dt)
+        private async Task ConnectionLoopAsync()
         {
-            if (_timer.ElapsedMilliseconds >= TimeForStarting)
+            while (_timer.ElapsedMilliseconds < TimeForStarting)
             {
-                Stop();
-                return;
-            }
+                if (_token.IsCancellationRequested)
+                {
+                    break;
+                }
 
-            await ReceiveAndAnswer();
+                await ReceiveAndAnswer();
+                await Task.Delay(100, _token);
+            }
         }
 
         private async Task ReceiveAndAnswer()
@@ -87,6 +81,11 @@ namespace Matches.Matches
                 var received = await _udpClient.ReceiveAsync();
                 await State.ProcessMessageAsync(received.RemoteEndPoint, received.Buffer);
             }
+        }
+
+        public void Dispose()
+        {
+            _udpClient?.Dispose();
         }
     }
 }

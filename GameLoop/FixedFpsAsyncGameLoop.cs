@@ -1,18 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace GameLoops
 {
-    public class FixedFpsGameLoop : FixedFpsGameLoopBase
+    public class FixedFpsAsyncGameLoop : FixedFpsGameLoopBase
     {
-        private readonly Action<double> _gameFrame;
+        private readonly Func<double, Task> _gameFrame;
 
         private CancellationTokenSource _tokenSource;
         private CancellationToken _token;
 
-        public FixedFpsGameLoop(Action<double> gameFrame, uint fps) 
+        public FixedFpsAsyncGameLoop(Func<double, Task> gameFrame, uint fps)
             : base (fps) 
             => _gameFrame = gameFrame;
 
@@ -21,7 +23,7 @@ namespace GameLoops
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;
 
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 var timer = new Stopwatch();
                 timer.Start();
@@ -43,7 +45,7 @@ namespace GameLoops
                     while (accumulator >= Dt)
                     {
                         accumulator -= Dt;
-                        _gameFrame(Frame);
+                        await _gameFrame(Frame);
                     }
                 }
             }, _token);

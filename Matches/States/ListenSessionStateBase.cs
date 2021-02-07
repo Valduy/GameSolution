@@ -2,8 +2,9 @@
 using System.Net;
 using System.Threading.Tasks;
 using Matches.Messages;
+using Network.Messages;
 
-namespace Matches.Matches.States
+namespace Matches.States
 {
     public abstract class ListenSessionStateBase
     {
@@ -16,13 +17,10 @@ namespace Matches.Matches.States
 
         public abstract Task ProcessMessageAsync(IPEndPoint ip, byte[] received);
 
-        protected static bool IsClientEndPoint(ClientEndPoints endPoints, IPEndPoint ip)
-            => endPoints.PublicIp == ip.Address.ToString() && endPoints.PublicPort == ip.Port;
-
         protected bool IsHost(IPEndPoint ip)
-            => IsClientEndPoint(Context.Host, ip);
+            => Context.Host.IsClientPublicEndPoint(ip);
 
         protected bool IsClient(IPEndPoint ip)
-            => Context.Clients.Any(o => IsClientEndPoint(o, ip));
+            => Context.Clients.Any(o => o.IsClientPublicEndPoint(ip));
     }
 }

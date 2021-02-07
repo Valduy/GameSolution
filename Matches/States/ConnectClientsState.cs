@@ -1,11 +1,13 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Matches.Messages;
 using Network;
+using Network.Messages;
 
-namespace Matches.Matches.States
+namespace Matches.States
 {
     public class ConnectClientsState : ListenSessionStateBase
     {
@@ -24,7 +26,7 @@ namespace Matches.Matches.States
             var messageForClient = new P2PConnectionMessage
             {
                 Role = Role.Client,
-                Clients = {Context.Host}
+                Clients = new List<ClientEndPoints> {Context.Host}
             };
             _clientMessage = MessageHelper.GetMessage(NetworkMessages.Initial, JsonSerializer.Serialize(messageForClient));
         }

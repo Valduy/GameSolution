@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Matches\Matches.csproj" />
+    <ProjectReference Include="..\MatchConnectors\Connectors.csproj" />
     <ProjectReference Include="..\Network\Network.csproj" />
   </ItemGroup>
 

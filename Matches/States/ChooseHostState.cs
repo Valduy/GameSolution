@@ -3,8 +3,9 @@ using System.Net;
 using System.Threading.Tasks;
 using Matches.Messages;
 using Network;
+using Network.Messages;
 
-namespace Matches.Matches.States
+namespace Matches.States
 {
     public class ChooseHostState : ListenSessionStateBase
     {
@@ -27,7 +28,7 @@ namespace Matches.Matches.States
 
         private bool TryGetClient(IPEndPoint ip, out ClientEndPoints endPoints)
         {
-            endPoints = Context.Clients.FirstOrDefault(o => IsClientEndPoint(o, ip));
+            endPoints = Context.Clients.FirstOrDefault(o => o.IsClientPublicEndPoint(ip));
             return endPoints != null;
         }
     }

@@ -1,11 +1,12 @@
-﻿using System.Linq;
+﻿using System;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Matches.Messages;
 using Network;
+using Network.Messages;
 
-namespace Matches.Matches.States
+namespace Matches.States
 {
     public class WaitClientState : ListenSessionStateBase
     {
@@ -20,7 +21,7 @@ namespace Matches.Matches.States
                 if (!IsClient(ip))
                 {
                     Context.AddClient(CreateClientEndPoints(ip, received));
-
+                    
                     if (Context.Clients.Count >= Context.PlayersCount)
                     {
                         Context.State = new ChooseHostState(Context);
@@ -35,14 +36,14 @@ namespace Matches.Matches.States
         private ClientEndPoints CreateClientEndPoints(IPEndPoint ip, byte[] received)
         {
             var data = MessageHelper.ToString(received);
-            // TODO: что если предет что-то не то...
-            var privateEndPoint = JsonSerializer.Deserialize<ClientPrivateEndPoint>(data);
+            // TODO: что если предадут что-то не то...
+            var privateEndPoint = JsonSerializer.Deserialize<ClientEndPoint>(data);
 
             return new ClientEndPoints(
                 ip.Address.ToString(),
                 ip.Port,
-                privateEndPoint.PrivateIp,
-                privateEndPoint.PrivatePort
+                privateEndPoint.Ip,
+                privateEndPoint.Port
             );
         }
     }

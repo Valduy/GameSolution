@@ -27,9 +27,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameLoops", "GameLoop\GameL
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Fakes", "Fakes", "{0E1F6D67-939B-4C00-AAF3-59E9D00D73C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FakeListenSession", "FakeListenSession\FakeListenSession.csproj", "{63EFD534-A2F3-405D-87DB-A342EF654204}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FakeListenSession", "FakeListenSession\FakeListenSession.csproj", "{63EFD534-A2F3-405D-87DB-A342EF654204}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FakeClient", "FakeClient\FakeClient.csproj", "{2FCEEA32-95F7-4E8F-955C-C7A42E59C76B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FakeClient", "FakeClient\FakeClient.csproj", "{2FCEEA32-95F7-4E8F-955C-C7A42E59C76B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Connectors", "MatchConnectors\Connectors.csproj", "{A34E58CE-F79D-46C2-A91A-A0DFC0D422C1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +83,10 @@ Global
 		{2FCEEA32-95F7-4E8F-955C-C7A42E59C76B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FCEEA32-95F7-4E8F-955C-C7A42E59C76B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FCEEA32-95F7-4E8F-955C-C7A42E59C76B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A34E58CE-F79D-46C2-A91A-A0DFC0D422C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A34E58CE-F79D-46C2-A91A-A0DFC0D422C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A34E58CE-F79D-46C2-A91A-A0DFC0D422C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A34E58CE-F79D-46C2-A91A-A0DFC0D422C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -98,6 +104,7 @@ Global
 		{0E1F6D67-939B-4C00-AAF3-59E9D00D73C7} = {FF7B4B6E-108B-45BF-8A18-65BE7795C180}
 		{63EFD534-A2F3-405D-87DB-A342EF654204} = {0E1F6D67-939B-4C00-AAF3-59E9D00D73C7}
 		{2FCEEA32-95F7-4E8F-955C-C7A42E59C76B} = {0E1F6D67-939B-4C00-AAF3-59E9D00D73C7}
+		{A34E58CE-F79D-46C2-A91A-A0DFC0D422C1} = {FF7B4B6E-108B-45BF-8A18-65BE7795C180}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {460A108C-517A-4B1D-8470-71DF81DC9131}
