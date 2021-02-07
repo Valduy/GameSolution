@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Matches;
 using MatchmakerModels.Models;
 using GameLoops;
+using Matches.Matches;
 
 namespace MatchmakerModels.Models
 {

@@ -14,31 +14,30 @@ namespace Matches.Matches.States
 
         public ConnectClientsState(ListenSessionMatch context) : base(context)
         {
-            var messageForHost = new HostMessage
+            var messageForHost = new P2PConnectionMessage
             {
-                Clients = Context.Clients
-                    .Select(o => new ClientMessage {Ip = o.Address.ToString(), Port = o.Port})
-                    .ToList()
+                Role = Role.Host,
+                Clients = Context.Clients.ToList(),
             };
-            _hostMessage = MessageHelper.GetMessage(NetworkMessages.Host, JsonSerializer.Serialize(messageForHost));
+            _hostMessage = MessageHelper.GetMessage(NetworkMessages.Initial, JsonSerializer.Serialize(messageForHost));
 
-            var messageForClient = new ClientMessage
+            var messageForClient = new P2PConnectionMessage
             {
-                Ip = Context.Host.Address.ToString(), 
-                Port = Context.Host.Port
+                Role = Role.Client,
+                Clients = {Context.Host}
             };
-            _clientMessage = MessageHelper.GetMessage(NetworkMessages.Client, JsonSerializer.Serialize(messageForClient));
+            _clientMessage = MessageHelper.GetMessage(NetworkMessages.Initial, JsonSerializer.Serialize(messageForClient));
         }
 
         public override async Task ProcessMessageAsync(IPEndPoint ip, byte[] received)
         {
             if (MessageHelper.GetMessageType(received) == NetworkMessages.Hello)
             {
-                if (Context.Host.Equals(ip))
+                if (IsHost(ip))
                 {
                     await Context.SendMessageAsync(_hostMessage, ip);
                 }
-                else if (Context.Clients.Any(o => o.Equals(ip)))
+                else if (IsClient(ip))
                 {
                     await Context.SendMessageAsync(_clientMessage, ip);
                 }

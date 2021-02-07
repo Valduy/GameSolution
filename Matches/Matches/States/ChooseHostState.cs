@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Matches.Messages;
 using Network;
 
 namespace Matches.Matches.States
@@ -15,15 +16,19 @@ namespace Matches.Matches.States
         {
             if (MessageHelper.GetMessageType(received) == NetworkMessages.Hello)
             {
-                var client = Context.Clients.FirstOrDefault(o => o.Equals(ip));
-
-                if (client != null)
+                if (TryGetClient(ip, out var client))
                 {
                     Context.ChooseHost(client);
                     Context.State = new ConnectClientsState(Context);
                     await Context.SendMessageAsync(MessageHelper.GetMessage(NetworkMessages.Hello), ip);
                 }
             }
+        }
+
+        private bool TryGetClient(IPEndPoint ip, out ClientEndPoints endPoints)
+        {
+            endPoints = Context.Clients.FirstOrDefault(o => IsClientEndPoint(o, ip));
+            return endPoints != null;
         }
     }
 }

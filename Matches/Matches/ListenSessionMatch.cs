@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using GameLoops;
 using Matches.Matches.States;
+using Matches.Messages;
 
 namespace Matches.Matches
 {
@@ -14,13 +15,13 @@ namespace Matches.Matches
     {
         private readonly UdpClient _udpClient;
 
-        private List<IPEndPoint> _clients;
-        private IPEndPoint _host;
+        private List<ClientEndPoints> _clients;
+        private ClientEndPoints _host;
         private FixedFpsGameLoop _connectionLoop;
         private Stopwatch _timer;
 
-        public IReadOnlyList<IPEndPoint> Clients => _clients;
-        public IPEndPoint Host => _host;
+        public IReadOnlyList<ClientEndPoints> Clients => _clients;
+        public ClientEndPoints Host => _host;
         internal ListenSessionStateBase State { get; set; }
 
         public ListenSessionMatch(int playersCount, long timeForStarting) 
@@ -39,7 +40,7 @@ namespace Matches.Matches
         {
             base.Start();
             State = new WaitClientState(this);
-            _clients = new List<IPEndPoint>();
+            _clients = new List<ClientEndPoints>();
             _timer = new Stopwatch();
             _connectionLoop = new FixedFpsGameLoop(ConnectionLoopFrame, 30);
             _timer.Start();
@@ -52,15 +53,18 @@ namespace Matches.Matches
             _connectionLoop.Stop();
         }
 
-        internal void AddClient(IPEndPoint client) => _clients.Add(client);
+        internal void AddClient(ClientEndPoints client) => _clients.Add(client);
 
-        internal void ChooseHost(IPEndPoint host)
+        internal void ChooseHost(ClientEndPoints host)
         {
             var client = _clients.FirstOrDefault(o => o.Equals(host));
             if (client == null) throw new ArgumentException();
             _clients.Remove(client);
             _host = client;
         }
+
+        internal async Task SendMessageAsync(byte[] message, ClientEndPoints client)
+            => await _udpClient.SendAsync(message, message.Length, client.PublicIp, client.PublicPort);
 
         internal async Task SendMessageAsync(byte[] message, IPEndPoint ip)
             => await _udpClient.SendAsync(message, message.Length, ip);

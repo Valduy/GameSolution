@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Matches.Messages;
 using Network;
 
 namespace Matches.Matches.States
@@ -15,9 +17,9 @@ namespace Matches.Matches.States
         {
             if (MessageHelper.GetMessageType(received) == NetworkMessages.Hello)
             {
-                if (!Context.Clients.Any(o => o.Equals(ip)))
+                if (!IsClient(ip))
                 {
-                    Context.AddClient(ip);
+                    Context.AddClient(CreateClientEndPoints(ip, received));
 
                     if (Context.Clients.Count >= Context.PlayersCount)
                     {
@@ -28,6 +30,20 @@ namespace Matches.Matches.States
 
                 await Context.SendMessageAsync(MessageHelper.GetMessage(NetworkMessages.Hello), ip);
             }
+        }
+
+        private ClientEndPoints CreateClientEndPoints(IPEndPoint ip, byte[] received)
+        {
+            var data = MessageHelper.ToString(received);
+            // TODO: что если предет что-то не то...
+            var privateEndPoint = JsonSerializer.Deserialize<ClientPrivateEndPoint>(data);
+
+            return new ClientEndPoints(
+                ip.Address.ToString(),
+                ip.Port,
+                privateEndPoint.PrivateIp,
+                privateEndPoint.PrivatePort
+            );
         }
     }
 }

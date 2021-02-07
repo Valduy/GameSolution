@@ -22,7 +22,7 @@ namespace FakeClient
             _serverIp = args[0];
             _serverPort = int.Parse(args[1]);
             _udpClient = new UdpClient(0);
-            Console.WriteLine("Fake clientMessage started!");
+            Console.WriteLine($"Fake clientEndPoints started on port: {((IPEndPoint)_udpClient.Client.LocalEndPoint).Port}!");
 
             ConnectWithServer();
         }
@@ -46,17 +46,25 @@ namespace FakeClient
                             break;
                         case NetworkMessages.Host:
                         {
-                            var message = JsonSerializer.Deserialize<HostMessage>(MessageHelper.ToString(response));
+                            var message = JsonSerializer.Deserialize<P2PConnectionMessage>(MessageHelper.ToString(response));
                             Console.WriteLine("Server has answer!");
-                            Console.WriteLine($"I am host!");
+                            Console.WriteLine("I am host!");
+
+                            Console.WriteLine("Data about clients:");
+                            foreach (var c in message.Clients)
+                            {
+                                Console.WriteLine($"    data: {c.Ip}:{c.Port}");
+                            }
+
                             RunHostLogic(message);
                             return;
                         }
                         case NetworkMessages.Client:
                         {
-                            var message = JsonSerializer.Deserialize<ClientMessage>(MessageHelper.ToString(response));
+                            var message = JsonSerializer.Deserialize<ClientEndPoints>(MessageHelper.ToString(response));
                             Console.WriteLine("Server has answer!");
-                            Console.WriteLine($"I am clientMessage!");
+                            Console.WriteLine("I am client!");
+                            Console.WriteLine($"Data about host: {message.Ip}:{message.Port}");
                             RunClientLogic(message);
                             return;
                         }
@@ -64,13 +72,13 @@ namespace FakeClient
                 }
 
                 _udpClient.Send(helloMessage, helloMessage.Length, _serverIp, _serverPort);
-                Thread.Sleep(1000);
+                Thread.Sleep(30);
             }
         }
 
-        private static void RunHostLogic(HostMessage hostMessage)
+        private static void RunHostLogic(P2PConnectionMessage p2PConnectionMessage)
         {
-            ConnectHostWithClients(hostMessage);
+            ConnectHostWithClients(p2PConnectionMessage);
 
             var reactions = new Dictionary<string, string>()
             {
@@ -95,7 +103,7 @@ namespace FakeClient
                         //TODO: проверить, кто нам шлет сообщения
                         case NetworkMessages.Info:
                             var data = MessageHelper.ToString(message);
-                            Console.WriteLine($"Message from clientMessage: {data}.");
+                            Console.WriteLine($"Message from clientEndPoints: {data}.");
 
                             if (reactions.TryGetValue(data, out var value))
                             {
@@ -109,13 +117,13 @@ namespace FakeClient
                     }
                 }
 
-                Thread.Sleep(1000);
+                //Thread.Sleep(1000);
             }
         }
 
-        private static void ConnectHostWithClients(HostMessage hostMessage)
+        private static void ConnectHostWithClients(P2PConnectionMessage p2PConnectionMessage)
         {
-            var clients = new HashSet<ClientMessage>(hostMessage.Clients);
+            var clients = new HashSet<ClientEndPoints>(p2PConnectionMessage.Clients);
             var connectMessage = MessageHelper.GetMessage(NetworkMessages.Connect);
             IPEndPoint ip = null;
 
@@ -138,23 +146,24 @@ namespace FakeClient
                     _udpClient.Send(connectMessage, connectMessage.Length, c.Ip, c.Port);
                 }
 
-                Thread.Sleep(1000);
+                Thread.Sleep(30);
             }
         }
 
-        private static void RunClientLogic(ClientMessage clientMessage)
+        private static void RunClientLogic(ClientEndPoints clientEndPoints)
         {
-            ConnectClientWithHost(clientMessage);
+            ConnectClientWithHost(clientEndPoints);
             var connectMessage = MessageHelper.GetMessage(NetworkMessages.Connect);
             IPEndPoint ip = null;
-            Console.WriteLine("Let's run as clientMessage!");
+            Console.WriteLine("Let's run as clien!");
 
             while (true)
             {
                 Console.WriteLine("Enter data...");
                 var input = Console.ReadLine();
+                //var input = "w";
                 var request = MessageHelper.GetMessage(NetworkMessages.Info, input);
-                _udpClient.Send(request, request.Length, clientMessage.Ip, clientMessage.Port);
+                _udpClient.Send(request, request.Length, clientEndPoints.Ip, clientEndPoints.Port);
 
                 if (_udpClient.Available > 0)
                 {
@@ -173,11 +182,11 @@ namespace FakeClient
                     }
                 }
 
-                Thread.Sleep(1000);
+                //Thread.Sleep(1000);
             }
         }
 
-        private static void ConnectClientWithHost(ClientMessage clientMessage)
+        private static void ConnectClientWithHost(ClientEndPoints clientEndPoints)
         {
             var connectMessage = MessageHelper.GetMessage(NetworkMessages.Connect);
             IPEndPoint ip = null;
@@ -190,7 +199,7 @@ namespace FakeClient
 
                     if (MessageHelper.GetMessageType(message) == NetworkMessages.Connect)
                     {
-                        if (ip.Address.ToString() == clientMessage.Ip && ip.Port == clientMessage.Port)
+                        if (ip.Address.ToString() == clientEndPoints.Ip && ip.Port == clientEndPoints.Port)
                         {
                             _udpClient.Send(connectMessage, connectMessage.Length, ip);
                             return;
@@ -198,8 +207,8 @@ namespace FakeClient
                     }
                 }
 
-                _udpClient.Send(connectMessage, connectMessage.Length, clientMessage.Ip, clientMessage.Port);
-                Thread.Sleep(1000);
+                _udpClient.Send(connectMessage, connectMessage.Length, clientEndPoints.Ip, clientEndPoints.Port);
+                Thread.Sleep(30);
             }
         }
     }

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Matches
+namespace Matches.Matches
 {
     public abstract class MatchBase
     {
