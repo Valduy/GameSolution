@@ -17,10 +17,10 @@ namespace Connectors.MatchConnectors
         private UdpClient _udpClient;
         private CancellationToken _token;
 
-        internal string Ip { get; private set; }
-        internal int Port { get; private set; }
-        internal string ServerIp { get; private set; }
-        internal int ServerPort { get; private set; }
+        public string Ip { get; private set; }
+        public int Port { get; private set; }
+        public string ServerIp { get; private set; }
+        public int ServerPort { get; private set; }
         internal Role Role { get; set; }
         internal List<ClientEndPoints> PotentialEndPoints { get; set; }
         internal List<ClientEndPoint> RealEndPoints { get; set; }

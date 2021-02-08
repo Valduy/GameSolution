@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,36 +29,61 @@ namespace FakeClient
                 case Role.Host:
                 {
                     Console.WriteLine("Clients:");
+
                     foreach (var c in result.Clients)
                     {
                         Console.WriteLine($"{c.Ip}:{c.Port}");
-                        await result.UdpClient.SendAsync(new byte[] { 1, 1, 1 }, 3, c.Ip, c.Port);
-                        var data = await result.UdpClient.ReceiveAsync();
-
-                        foreach (var b in data.Buffer)
-                        {
-                            Console.Write(b);
-                        }
                     }
                     break;
                 }
                 case Role.Client:
                 {
-                    Console.WriteLine("Host");
+                    Console.WriteLine("Host:");
                     var host = result.Clients.First();
                     Console.WriteLine($"{host.Ip}:{host.Port}");
-                    await result.UdpClient.SendAsync(new byte[] { 1, 1, 1 }, 3, host.Ip, host.Port);
-                    var data = await result.UdpClient.ReceiveAsync();
-
-                    foreach (var b in data.Buffer)
-                    {
-                        Console.Write(b);
-                    }
                     break;
                 }
             }
 
-            Console.ReadKey();
+            var readTask = Task.Run(() =>
+            {
+                IPEndPoint ip = null;
+
+                while (true)
+                {
+                    if (result.UdpClient.Available > 0)
+                    {
+                        lock (result.UdpClient)
+                        {
+                            
+                            var bytes = result.UdpClient.Receive(ref ip);
+                            var message = Encoding.ASCII.GetString(bytes);
+                            Console.WriteLine("Received message:");
+                            Console.WriteLine(message);
+                            Console.WriteLine("Enter message:");
+                        }
+                    }
+                }
+            });
+
+            var writeTask = Task.Run(() =>
+            {
+                while (true)
+                {
+                    var message = Console.ReadLine();
+                    var bytes = Encoding.ASCII.GetBytes(message);
+                    
+                    lock (result.UdpClient)
+                    {
+                        foreach (var c in result.Clients)
+                        {
+                            result.UdpClient.Send(bytes, bytes.Length, c.Ip, c.Port);
+                        }
+                    }
+                }
+            });
+
+            Task.WaitAll(readTask, writeTask);
         }
     }
 }
