@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Matchmaker.Services;
-using MatchmakerModels.Models;
+using MatchmakerServices.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Matchmaker.Controllers
@@ -12,31 +12,31 @@ namespace Matchmaker.Controllers
     public class MatchmakerController : Controller
     {
         private readonly ISimpleAuthorizationService _authorizationService;
-        private readonly IMatchmakerModel _matchmakerModel;
+        private readonly IMatchmakerService _matchmakerService;
 
         public MatchmakerController(
             ISimpleAuthorizationService authorizationService,
-            IMatchmakerModel matchmakerModel)
+            IMatchmakerService matchmakerService)
         {
             _authorizationService = authorizationService;
-            _matchmakerModel = matchmakerModel;
+            _matchmakerService = matchmakerService;
         }
 
         [HttpGet("enqueue")]
         public IActionResult Enqueue() 
-            => OkOnAuthorized(() => _matchmakerModel.Enqueue(_authorizationService.GetIdentifier(HttpContext)));
+            => OkOnAuthorized(() => _matchmakerService.Enqueue(_authorizationService.GetIdentifier(HttpContext)));
 
         [HttpGet("status/get")]
         public IActionResult GetStatus() 
-            => OkOnAuthorized(() => _matchmakerModel.GetStatus(_authorizationService.GetIdentifier(HttpContext)));
+            => OkOnAuthorized(() => _matchmakerService.GetStatus(_authorizationService.GetIdentifier(HttpContext)));
 
         [HttpGet("match/get")]
         public IActionResult GetMatch() 
-            => OkOnAuthorized(() => _matchmakerModel.GetMatch(_authorizationService.GetIdentifier(HttpContext)));
+            => OkOnAuthorized(() => _matchmakerService.GetMatch(_authorizationService.GetIdentifier(HttpContext)));
 
         [HttpGet("remove")]
         public IActionResult Remove() 
-            => OkOnAuthorized(() => _matchmakerModel.Remove(_authorizationService.GetIdentifier(HttpContext)));
+            => OkOnAuthorized(() => _matchmakerService.Remove(_authorizationService.GetIdentifier(HttpContext)));
 
         private IActionResult OkOnAuthorized(Func<object> func) 
             => _authorizationService.CheckAuthorization(HttpContext) 

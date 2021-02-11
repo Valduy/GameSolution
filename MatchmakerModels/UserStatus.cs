@@ -1,4 +1,4 @@
-﻿namespace MatchmakerModels
+﻿namespace MatchmakerServices
 {
     /// <summary>
     /// Возможные статусы ползьзователя.

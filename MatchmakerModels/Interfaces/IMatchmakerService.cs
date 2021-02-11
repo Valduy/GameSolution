@@ -1,9 +1,9 @@
-﻿namespace MatchmakerModels.Models
+﻿namespace MatchmakerServices.Interfaces
 {
     /// <summary>
     /// Интерфейс простого матчмейкера.
     /// </summary>
-    public interface IMatchmakerModel
+    public interface IMatchmakerService
     {
         /// <summary>
         /// Метод позволяет встать в очередь на участие в матче.

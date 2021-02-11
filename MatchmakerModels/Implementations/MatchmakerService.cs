@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Matches;
-using MatchmakerModels.Models;
 using GameLoops;
 using Matches;
+using MatchmakerServices.Interfaces;
 
-namespace MatchmakerModels.Models
+namespace MatchmakerServices.Implementations
 {
-    public class MatchmakerModel<TMatch> : IMatchmakerModel, IDisposable where TMatch : MatchBase, new()
+    public class MatchmakerService<TMatch> : IMatchmakerService, IDisposable where TMatch : MatchBase, new()
     {
         private readonly FixedFpsGameLoop _matchmakingLoop;
         
@@ -21,14 +19,14 @@ namespace MatchmakerModels.Models
 
         public int PlayersPerMatch { get; }
 
-        public MatchmakerModel(int playersPerMatch)
+        public MatchmakerService(int playersPerMatch)
         {
             PlayersPerMatch = playersPerMatch;
             _matchmakingLoop = new FixedFpsGameLoop(ManageMatchmaking, 60);
             _matchmakingLoop.Start();
         }
 
-        ~MatchmakerModel()
+        ~MatchmakerService()
         {
             Dispose(false);
         }
@@ -105,12 +103,6 @@ namespace MatchmakerModels.Models
             if (disposing) { }
 
             _matchmakingLoop.Stop();
-
-            foreach (var match in _matches)
-            {
-                match.Stop();
-            }
-
             _disposed = true;
         }
 
@@ -121,9 +113,6 @@ namespace MatchmakerModels.Models
                 if (_waitingPlayers.Count >= PlayersPerMatch)
                 {
                     var match = new TMatch();
-                    match.Started += OnMatchStarted;
-                    match.Ended += OnMatchEnded;
-                    match.Start();
 
                     for (int i = 0; i < PlayersPerMatch; i++)
                     {
