@@ -25,7 +25,7 @@ namespace Context
         {
             builder.HasAlternateKey(u => u.Login);
             builder.Property(u => u.Login).IsRequired().HasMaxLength(20);
-            builder.Property(u => u.Password).IsRequired().HasMaxLength(20);
+            builder.Property(u => u.Password).IsRequired();
         }
 
         public void FriendshipConfigure(EntityTypeBuilder<Friendship> builder)

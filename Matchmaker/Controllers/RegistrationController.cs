@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Context;
 using Matchmaker.Exceptions;
+using Matchmaker.Services.Interfaces;
 using Matchmaker.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Models;
 
@@ -16,35 +18,28 @@ namespace Matchmaker.Controllers
     [Route("api/[controller]")]
     public class RegistrationController : Controller
     {
-        private readonly GameDbContext _gameContext;
-        private readonly IMapper _mapper;
+        private readonly IAccountService _accountService;
 
-        public RegistrationController(
-            GameDbContext gameContext,
-            IMapper mapper)
+        public RegistrationController(IAccountService accountService)
         {
-            _gameContext = gameContext;
-            _mapper = mapper;
+            _accountService = accountService;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody]UserViewModel userViewModel)
+        public async Task<IActionResult> Register([FromBody]UserViewModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             try
             {
-                var user = _mapper.Map<User>(userViewModel);
-                await _gameContext.Users.AddAsync(user);
-                await _gameContext.SaveChangesAsync();
+                await _accountService.RegisterAsync(model);
             }
-            catch(DbUpdateException)
+            catch(AddItemException ex)
             {
-                throw new HttpStatusException(HttpStatusCode.Conflict, "Логин уже используется");
+                throw new HttpStatusException(HttpStatusCode.Conflict, ex.Message);
             }
 
             return Ok();
-
         }
     }
 }
