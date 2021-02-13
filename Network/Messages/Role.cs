@@ -1,4 +1,4 @@
-﻿namespace Matches.Messages
+﻿namespace Network.Messages
 {
     public enum Role
     {

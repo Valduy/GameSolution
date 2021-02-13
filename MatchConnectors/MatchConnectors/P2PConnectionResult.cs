@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Net.Sockets;
-using Matches.Messages;
 using Network.Messages;
 
 namespace Connectors.MatchConnectors

@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Connectors.MatchConnectors.States;
 using GameLoops;
-using Matches.Messages;
 using Network.Messages;
 
 namespace Connectors.MatchConnectors

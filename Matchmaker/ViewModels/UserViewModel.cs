@@ -8,9 +8,9 @@ namespace Matchmaker.ViewModels
 {
     public class UserViewModel
     {
-        [StringLength(int.MaxValue, MinimumLength = 4, ErrorMessage = "Short login")]
+        [StringLength(20, MinimumLength = 4, ErrorMessage = "Логин слишком короткий")]
         public string Login { get; set; }
-        [StringLength(int.MaxValue, MinimumLength = 8, ErrorMessage = "Short password")]
+        [StringLength(20, MinimumLength = 8, ErrorMessage = "Пароль слишком короткий")]
         public string Password { get; set; }
     }
 }

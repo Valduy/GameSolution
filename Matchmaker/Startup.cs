@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using DBRepository;
+using Context;
 using Matchmaker.Helpers;
 using Matchmaker.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -50,13 +50,13 @@ namespace Matchmaker
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            //if (env.IsDevelopment())
+            //{
+            //    app.UseDeveloperExceptionPage();
+            //}
 
-            //app.UseExceptionHandler("/error");
-            //app.UseHsts();
+            app.UseExceptionHandler("/error");
+            app.UseHsts();
 
             app.UseMvc();
         }

@@ -33,9 +33,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FakeClient", "FakeClient\Fa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Connectors", "MatchConnectors\Connectors.csproj", "{A34E58CE-F79D-46C2-A91A-A0DFC0D422C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Models\Models.csproj", "{28BBF354-A16B-47BE-AFF8-928447C310E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Models", "Models\Models.csproj", "{28BBF354-A16B-47BE-AFF8-928447C310E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBRepository", "DBRepository\DBRepository.csproj", "{5CEBBA9C-BB00-498C-9B31-742EDDA01482}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Context", "DBRepository\Context.csproj", "{5CEBBA9C-BB00-498C-9B31-742EDDA01482}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

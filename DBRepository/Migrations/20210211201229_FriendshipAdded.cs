@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace DBRepository.Migrations
+namespace Context.Migrations
 {
     public partial class FriendshipAdded : Migration
     {

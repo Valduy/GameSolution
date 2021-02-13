@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using Network.Messages;
+﻿using System.Collections.Generic;
 
-namespace Matches.Messages
+namespace Network.Messages
 {
     public class P2PConnectionMessage
     {

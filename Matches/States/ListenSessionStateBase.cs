@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Matches.Messages;
 using Network.Messages;
 
 namespace Matches.States

@@ -2,8 +2,8 @@
 {
     public class ClientEndPoints
     {
-        public ClientEndPoint PublicEndPoint { get; set; }
-        public ClientEndPoint PrivateEndPoint { get; set; }
+        public ClientEndPoint PublicEndPoint { get; }
+        public ClientEndPoint PrivateEndPoint { get; }
 
         public ClientEndPoints(string publicIp, int publicPort, string privateIp, int privatePort)
         {

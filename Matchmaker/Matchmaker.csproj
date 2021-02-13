@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DBRepository\DBRepository.csproj" />
+    <ProjectReference Include="..\DBRepository\Context.csproj" />
     <ProjectReference Include="..\MatchmakerModels\MatchmakerServices.csproj" />
   </ItemGroup>
 

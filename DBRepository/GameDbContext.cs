@@ -1,9 +1,8 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Models;
 
-namespace DBRepository
+namespace Context
 {
     public sealed class GameDbContext : DbContext
     {
@@ -24,8 +23,8 @@ namespace DBRepository
 
         public void UserConfigure(EntityTypeBuilder<User> builder)
         {
+            builder.HasAlternateKey(u => u.Login);
             builder.Property(u => u.Login).IsRequired().HasMaxLength(20);
-            builder.HasAlternateKey(u => u.Password);
             builder.Property(u => u.Password).IsRequired().HasMaxLength(20);
         }
 
