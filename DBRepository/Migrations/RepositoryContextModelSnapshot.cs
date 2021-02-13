@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace DBRepository.Migrations
 {
-    [DbContext(typeof(RepositoryContext))]
+    [DbContext(typeof(GameDbContext))]
     partial class RepositoryContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

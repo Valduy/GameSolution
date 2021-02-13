@@ -5,12 +5,12 @@ using Models;
 
 namespace DBRepository
 {
-    public sealed class RepositoryContext : DbContext
+    public sealed class GameDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
         public DbSet<Friendship> FriendLists { get; set; }
 
-        public RepositoryContext(DbContextOptions<RepositoryContext> options) 
+        public GameDbContext(DbContextOptions<GameDbContext> options) 
             : base(options)
         {
 
