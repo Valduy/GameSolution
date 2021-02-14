@@ -6,13 +6,12 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Context;
 using Matchmaker.Exceptions;
-using Matchmaker.Services.Interfaces;
 using Matchmaker.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using BC = BCrypt.Net.BCrypt;
 
-namespace Matchmaker.Services.Implementations
+namespace Matchmaker.Services
 {
     public class AccountService : IAccountService
     {
@@ -42,10 +41,7 @@ namespace Matchmaker.Services.Implementations
             }
         }
 
-        public async Task<bool> AuthenticateAsync(UserViewModel model)
-        {
-            var user = await _gameContext.Users.FirstOrDefaultAsync(u => u.Login == model.Login);
-            return user != null && BC.Verify(model.Password, user.Password);
-        }
+        public async Task<User> AuthenticateAsync(UserViewModel model) 
+            => await _gameContext.Users.FirstOrDefaultAsync(u => u.Login == model.Login);
     }
 }

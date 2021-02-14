@@ -1,4 +1,6 @@
-﻿namespace MatchmakerServices.Interfaces
+﻿using Network;
+
+namespace MatchmakerServices.Interfaces
 {
     /// <summary>
     /// Интерфейс простого матчмейкера.
