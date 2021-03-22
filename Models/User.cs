@@ -8,9 +8,7 @@ namespace Models
     {
         public int Id { get; set; }
         public string Login { get; set; }
-        [JsonIgnore]
         public string Password { get; set; }
-        [JsonIgnore]
         public List<Friendship> FriendList { get; set; }
     }
 }
