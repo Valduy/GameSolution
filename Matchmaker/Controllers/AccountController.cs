@@ -31,6 +31,15 @@ namespace Matchmaker.Controllers
             _accountService = accountService;
         }
 
+        /// <summary>
+        /// Метод регистрирует пользователя в системе.
+        /// </summary>
+        /// <param name="model"><see cref="UserViewModel"/>.</param>
+        /// <returns>
+        /// <see cref="BadRequestObjectResult"/> с ошибками, возникшими при волидации, если <see cref="UserViewModel"/> не валидна.
+        /// <see cref="OkResult"/>, если регистрация прошла успешно.
+        /// </returns>
+        /// <exception cref="HttpStatusException">Выбрасывается, когда логин уже занят.</exception>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody]UserViewModel model)
         {
