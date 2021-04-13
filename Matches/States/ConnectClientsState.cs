@@ -15,14 +15,14 @@ namespace Matches.States
 
         public ConnectClientsState(ListenSessionMatch context) : base(context)
         {
-            var messageForHost = new P2PConnectionMessage
+            var messageForHost = new ConnectionMessage
             {
                 Role = Role.Host,
                 Clients = Context.Clients.ToList(),
             };
             _hostMessage = MessageHelper.GetMessage(NetworkMessages.Initial, JsonSerializer.Serialize(messageForHost));
 
-            var messageForClient = new P2PConnectionMessage
+            var messageForClient = new ConnectionMessage
             {
                 Role = Role.Client,
                 Clients = new List<ClientEndPoints> {Context.Host}

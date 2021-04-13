@@ -31,7 +31,7 @@ namespace Connectors.MatchConnectors.States
                     break;
                 case NetworkMessages.Initial:
                     var data = MessageHelper.ToString(message);
-                    var connectionMessage = JsonConvert.DeserializeObject<P2PConnectionMessage>(data);
+                    var connectionMessage = JsonConvert.DeserializeObject<ConnectionMessage>(data);
                     Context.Role = connectionMessage.Role;
                     Context.PotentialEndPoints = connectionMessage.Clients;
                     Context.State = new HolePunchingState(Context);

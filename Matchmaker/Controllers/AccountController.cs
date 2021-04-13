@@ -25,10 +25,14 @@ namespace Matchmaker.Controllers
     public class AccountController : Controller
     {
         private readonly IAccountService _accountService;
+        private readonly IMapper _mapper;
 
-        public AccountController(IAccountService accountService)
+        public AccountController(
+            IAccountService accountService,
+            IMapper mapper)
         {
             _accountService = accountService;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -47,7 +51,8 @@ namespace Matchmaker.Controllers
 
             try
             {
-                await _accountService.RegisterAsync(model);
+                var user = _mapper.Map<User>(model);
+                await _accountService.RegisterAsync(user);
             }
             catch(AddItemException ex)
             {
@@ -85,7 +90,8 @@ namespace Matchmaker.Controllers
         private async Task<ClaimsIdentity> GetIdentity(UserViewModel model)
         {
             ClaimsIdentity identity = null;
-            var user = await _accountService.AuthenticateAsync(model);
+            var user = _mapper.Map<User>(model);
+            user = await _accountService.AuthenticateAsync(user);
 
             if (user != null)
             {

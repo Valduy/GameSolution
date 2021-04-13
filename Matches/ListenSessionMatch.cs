@@ -11,47 +11,57 @@ using Network.Messages;
 
 namespace Matches
 {
-    public class ListenSessionMatch : MatchBase, IDisposable
+    public class ListenSessionMatch : IMatch, IDisposable
     {
-        private readonly UdpClient _udpClient;
-
+        private UdpClient _udpClient;
         private CancellationToken _token;
         private List<ClientEndPoints> _clients;
         private ClientEndPoints _host;
         private Stopwatch _timer;
+        
+        public int Port { get; private set; }
+        public int PlayersCount { get; private set; }
+        public long TimeForStarting { get; private set; }
 
         public IReadOnlyList<ClientEndPoints> Clients => _clients;
         public ClientEndPoints Host => _host;
+
         internal ListenSessionStateBase State { get; set; }
 
-        public ListenSessionMatch(int playersCount, long timeForStarting) 
-            : this(playersCount, timeForStarting, 0)
-        {
-        }
+        public event Action<IMatch> MatchStarted;
 
-        public ListenSessionMatch(int playersCount, long timeForStarting, int port) 
-            : base(playersCount, timeForStarting, port)
+        public async Task WorkAsync(int playersCount, CancellationToken token = default)
+            => await WorkAsync(playersCount, 30000, 0, token);
+
+        public async Task WorkAsync(int playersCount, long timeForStarting, CancellationToken token = default)
+            => await WorkAsync(playersCount, timeForStarting, 0, token);
+
+        public async Task WorkAsync(int playersCount, long timeForStarting, int port, CancellationToken token = default)
         {
+            PlayersCount = playersCount;
+            TimeForStarting = timeForStarting;
+            _token = token;
+
             _udpClient = new UdpClient(port);
             Port = ((IPEndPoint)_udpClient.Client.LocalEndPoint).Port;
-        }
 
-        public override async Task WorkAsync(CancellationToken token = default)
-        {
-            _token = token;
             State = new WaitClientState(this);
+            _host = null;
             _clients = new List<ClientEndPoints>();
             _timer = new Stopwatch();
             _timer.Start();
+
             await ConnectionLoopAsync();
         }
 
         internal void AddClient(ClientEndPoints client) => _clients.Add(client);
 
+        internal void NotifyThatStarted() => MatchStarted?.Invoke(this);
+
         internal void ChooseHost(ClientEndPoints host)
         {
-            var client = _clients.FirstOrDefault(o => o.Equals(host));
-            if (client == null) throw new ArgumentException();
+            var client = _clients.FirstOrDefault(o => o.Equals(host)) 
+                         ?? throw new ArgumentException("Такой игрок отсутствует среди клиентов.");
             _clients.Remove(client);
             _host = client;
         }
@@ -61,19 +71,15 @@ namespace Matches
 
         private async Task ConnectionLoopAsync()
         {
-            while (_timer.ElapsedMilliseconds < TimeForStarting)
+            while (_timer.ElapsedMilliseconds < TimeForStarting && !_token.IsCancellationRequested)
             {
-                if (_token.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                await ReceiveAndAnswer();
-                await Task.Delay(100, _token);
+                await ReceiveAndAnswerAsync();
             }
+
+            _udpClient.Close();
         }
 
-        private async Task ReceiveAndAnswer()
+        private async Task ReceiveAndAnswerAsync()
         {
             if (_udpClient.Available > 0)
             {
@@ -84,6 +90,7 @@ namespace Matches
 
         public void Dispose()
         {
+            _udpClient.Close();
             _udpClient?.Dispose();
         }
     }

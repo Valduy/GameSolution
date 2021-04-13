@@ -19,12 +19,23 @@ namespace Matches.States
             {
                 if (!IsClient(ip))
                 {
-                    Context.AddClient(CreateClientEndPoints(ip, received));
-                    
-                    if (Context.Clients.Count >= Context.PlayersCount)
+                    try
                     {
-                        Context.State = new ChooseHostState(Context);
-                        await Context.SendMessageAsync(MessageHelper.GetMessage(NetworkMessages.Hello), ip);
+                        Context.AddClient(CreateClientEndPoints(ip, received));
+
+                        if (Context.Clients.Count >= Context.PlayersCount)
+                        {
+                            Context.State = new ChooseHostState(Context);
+                            Context.NotifyThatStarted();
+                            await Context.SendMessageAsync(MessageHelper.GetMessage(NetworkMessages.Hello), ip);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex is JsonException || ex is ArgumentException)
+                        {
+                            return; // TODO: лог о неправильном JSON'е?
+                        }
                     }
                 }
 
@@ -35,8 +46,8 @@ namespace Matches.States
         private ClientEndPoints CreateClientEndPoints(IPEndPoint ip, byte[] received)
         {
             var data = MessageHelper.ToString(received);
-            // TODO: что если предадут что-то не то...
-            var privateEndPoint = JsonSerializer.Deserialize<ClientEndPoint>(data);
+            var privateEndPoint = JsonSerializer.Deserialize<ClientEndPoint>(data) 
+                                  ?? throw new ArgumentException("При десериализации конечной точки был получен null.");
 
             return new ClientEndPoints(
                 ip.Address.ToString(),

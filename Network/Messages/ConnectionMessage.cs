@@ -2,7 +2,7 @@
 
 namespace Network.Messages
 {
-    public class P2PConnectionMessage
+    public class ConnectionMessage
     {
         public Role Role { get; set; }
         public List<ClientEndPoints> Clients { get; set; }
