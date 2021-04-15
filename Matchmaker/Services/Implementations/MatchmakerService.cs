@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper.Internal;
 using GameLoops;
 using Matches;
 using Network;
@@ -13,8 +12,8 @@ namespace Matchmaker.Services
     public class MatchmakerService<TMatch> : IMatchmakerService, IDisposable where TMatch : IMatch, new()
     {
         private readonly FixedFpsGameLoop _matchmakingLoop;
-        private CancellationTokenSource _tokenSource;
-        private CancellationToken _token;
+        private readonly CancellationTokenSource _tokenSource;
+        private readonly CancellationToken _token;
 
         private readonly List<string> _waitingPlayers = new List<string>();
         private readonly List<Task> _matchesTasks = new List<Task>();
@@ -91,10 +90,7 @@ namespace Matchmaker.Services
         {
             lock (_waitingPlayers)
             {
-                var id = _waitingPlayers.FirstOrDefault(o => o == userId);
-                if (id == null) return false;
-                _waitingPlayers.Remove(id);
-                return true;
+                return _waitingPlayers.Remove(userId);
             }
         }
 
@@ -136,12 +132,22 @@ namespace Matchmaker.Services
                         _waitingPlayers.Remove(player);
                     }
 
-                    var matchTask = new Task(async () => await match.WorkAsync(PlayersPerMatch, _token), _token);
-                    matchTask.ContinueWith(OnMatchTaskEnded, _token);
-                    _matchesTasks.Add(matchTask);
-                    matchTask.Start();
+                    ConfigureMatchTask(match);
                 }
             }
+        }
+
+        private void ConfigureMatchTask(TMatch match)
+        {
+            var matchTask = new Task(async () => await match.WorkAsync(PlayersPerMatch, _token), _token);
+            matchTask.ContinueWith(OnMatchTaskEnded, _token);
+
+            lock (_matchesTasks)
+            {
+                _matchesTasks.Add(matchTask);
+            }
+
+            matchTask.Start();
         }
 
         private void OnMatchStarted(IMatch matchBase)
