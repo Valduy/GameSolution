@@ -1,27 +1,29 @@
 using System.Threading.Tasks;
 using Xunit;
-using GameLoops;
 
-namespace ECS.Tests
+namespace GameLoops.Tests.Unit
 {
     public class FixedFpsGameLoopTests
     {
         [Fact]
-        public void FpsFact()
+        public async Task Start_IncrementAsGameFrame_CounterNear60AfterSecondOfIterations()
         {
+            // Arrange
             uint fps = 60;
+            int error = 10;
             double actualFps = 0;
             var gameLoop = new FixedFpsGameLoop((dt) => actualFps++, fps);
 
-            var task = Task.Run(async () =>
+            // Act
+            await Task.Run(async () =>
             {
                 gameLoop.Start();
                 await Task.Delay(1000);
                 gameLoop.Stop();
             });
-            task.Wait();
 
-            Assert.InRange(actualFps, fps - 10, fps + 10);
+            // Assert
+            Assert.InRange(actualFps, fps - error, fps + error);
         }
     }
 }

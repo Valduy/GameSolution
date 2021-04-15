@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
-namespace Network.Tests
+namespace Network.Tests.Unit
 {
     public class MessageHelperTests
     {
@@ -37,7 +37,7 @@ namespace Network.Tests
 
         [Theory]
         [ClassData(typeof(MessagesWithStringGenerator))]
-        public void WriteAndReadStringFromMessageTheory(NetworkMessages type, string data)
+        public void ToString_MessageWithStringData_ReturnStringData(NetworkMessages type, string data)
         {
             // Arrange
             var message = MessageHelper.GetMessage(type, data);
