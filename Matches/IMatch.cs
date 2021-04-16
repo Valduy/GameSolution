@@ -8,12 +8,9 @@ namespace Matches
     {
         int Port { get; }
         int PlayersCount { get; }
-        long TimeForStarting { get; }
 
         event Action<IMatch> MatchStarted;
-
-        Task WorkAsync(int playersCount, CancellationToken token = default);
-        Task WorkAsync(int playersCount, long timeForStarting, CancellationToken token = default);
-        Task WorkAsync(int playersCount, long timeForStarting, int port, CancellationToken token = default);
+        
+        Task WorkAsync(CancellationToken token = default);
     }
 }

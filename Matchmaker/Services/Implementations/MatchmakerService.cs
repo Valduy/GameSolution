@@ -5,11 +5,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using GameLoops;
 using Matches;
+using Matchmaker.Factories;
 using Network;
 
 namespace Matchmaker.Services
 {
-    public class MatchmakerService<TMatch> : IMatchmakerService, IDisposable where TMatch : IMatch, new()
+    public class MatchmakerService : IMatchmakerService, IDisposable
     {
         private readonly FixedFpsGameLoop _matchmakingLoop;
         private readonly CancellationTokenSource _tokenSource;
@@ -19,13 +20,15 @@ namespace Matchmaker.Services
         private readonly List<Task> _matchesTasks = new List<Task>();
         private readonly Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
 
+        private readonly IMatchFactory _matchFactory;
+
         private bool _disposed;
 
-        public int PlayersPerMatch { get; }
+        public int PlayersPerMatch => 2;
 
-        public MatchmakerService(int playersPerMatch)
+        public MatchmakerService(IMatchFactory matchFactory)
         {
-            PlayersPerMatch = playersPerMatch;
+            _matchFactory = matchFactory;
             _matchmakingLoop = new FixedFpsGameLoop(ManageMatchmaking, 60);
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;
@@ -122,8 +125,9 @@ namespace Matchmaker.Services
             {
                 if (_waitingPlayers.Count >= PlayersPerMatch)
                 {
-                    var match = new TMatch();
+                    var match = _matchFactory.CreateMatch(PlayersPerMatch);
                     match.MatchStarted += OnMatchStarted;
+                    ConfigureMatchTask(match);
 
                     for (int i = 0; i < PlayersPerMatch; i++)
                     {
@@ -131,15 +135,13 @@ namespace Matchmaker.Services
                         _playerToMatch[player] = match.Port;
                         _waitingPlayers.Remove(player);
                     }
-
-                    ConfigureMatchTask(match);
                 }
             }
         }
 
-        private void ConfigureMatchTask(TMatch match)
+        private void ConfigureMatchTask(IMatch match)
         {
-            var matchTask = new Task(async () => await match.WorkAsync(PlayersPerMatch, _token), _token);
+            var matchTask = new Task(async () => await match.WorkAsync(_token), _token);
             matchTask.ContinueWith(OnMatchTaskEnded, _token);
 
             lock (_matchesTasks)
@@ -150,12 +152,12 @@ namespace Matchmaker.Services
             matchTask.Start();
         }
 
-        private void OnMatchStarted(IMatch matchBase)
+        private void OnMatchStarted(IMatch match)
         {
             lock (_playerToMatch)
             {
                 var matchPlayers = _playerToMatch
-                    .Where(o => o.Value == matchBase.Port)
+                    .Where(o => o.Value == match.Port)
                     .Select(o => o.Key);
 
                 foreach (var player in matchPlayers)

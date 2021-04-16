@@ -19,37 +19,47 @@ namespace Matches
         private ClientEndPoints _host;
         private Stopwatch _timer;
         
-        public int Port { get; private set; }
-        public int PlayersCount { get; private set; }
-        public long TimeForStarting { get; private set; }
+        public int PlayersCount { get; }
+        public int Port { get; }
+        public long TimeForStarting { get; }
+
 
         public IReadOnlyList<ClientEndPoints> Clients => _clients;
         public ClientEndPoints Host => _host;
 
         internal ListenSessionStateBase State { get; set; }
 
+
         public event Action<IMatch> MatchStarted;
 
-        public async Task WorkAsync(int playersCount, CancellationToken token = default)
-            => await WorkAsync(playersCount, 30000, 0, token);
+        public ListenSessionMatch(int playersCount) 
+            : this(playersCount, 0)
+        { }
 
-        public async Task WorkAsync(int playersCount, long timeForStarting, CancellationToken token = default)
-            => await WorkAsync(playersCount, timeForStarting, 0, token);
+        public ListenSessionMatch(int playersCount, int port) 
+            : this(playersCount, 30000, port)
+        { }
 
-        public async Task WorkAsync(int playersCount, long timeForStarting, int port, CancellationToken token = default)
+        public ListenSessionMatch(int playersCount, long timeForStarting) 
+            : this(playersCount, timeForStarting, 0)
+        { }
+
+        public ListenSessionMatch(int playersCount, long timeForStarting, int port)
         {
             PlayersCount = playersCount;
             TimeForStarting = timeForStarting;
-            _token = token;
-
-            _udpClient = new UdpClient(port);
+            _udpClient = new UdpClient(Port);
             Port = ((IPEndPoint)_udpClient.Client.LocalEndPoint).Port;
+        }
 
-            State = new WaitClientState(this);
+        public async Task WorkAsync(CancellationToken token = default)
+        {
+            _token = token;
             _host = null;
             _clients = new List<ClientEndPoints>();
             _timer = new Stopwatch();
             _timer.Start();
+            State = new WaitClientState(this);
 
             await ConnectionLoopAsync();
         }
@@ -60,7 +70,7 @@ namespace Matches
 
         internal void ChooseHost(ClientEndPoints host)
         {
-            var client = _clients.FirstOrDefault(o => o.Equals(host)) 
+            var client = _clients.FirstOrDefault(o => o.IsSame(host)) 
                          ?? throw new ArgumentException("Такой игрок отсутствует среди клиентов.");
             _clients.Remove(client);
             _host = client;
@@ -91,7 +101,7 @@ namespace Matches
         public void Dispose()
         {
             _udpClient.Close();
-            _udpClient?.Dispose();
+            _udpClient.Dispose();
         }
     }
 }

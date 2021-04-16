@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO;
 using Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace Matchmaker
+namespace Matchmaker.Factories
 {
     public class DesignTimeRepositoryContextFactory : IDesignTimeDbContextFactory<GameDbContext>
     {

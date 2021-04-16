@@ -24,7 +24,7 @@ namespace Orderers
                 GetOrCreate(sortedMethods, priority).Add(testCase);
             }
 
-            foreach (TTestCase testCase in
+            foreach (var testCase in
                 sortedMethods.Keys.SelectMany(
                     priority => sortedMethods[priority].OrderBy(
                         testCase => testCase.TestMethod.Method.Name)))
