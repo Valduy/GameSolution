@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Connectors.MatchConnectors.States;
@@ -9,7 +10,12 @@ namespace Connectors.MatchConnectors
 {
     public class MatchConnector : IMatchConnectorBase
     {
+        private const int LoopDelay = 100;
+        private const int ReceiveTimeout = 100;
+        private const int MaxAttempts = 10;
+
         private bool _isRun;
+        private int _currentAttempts;
         private UdpClient _udpClient;
         private CancellationToken _token;
 
@@ -44,22 +50,45 @@ namespace Connectors.MatchConnectors
         private async Task ConnectionLoopAsync()
         {
             _isRun = true;
+            _udpClient.Client.ReceiveTimeout = ReceiveTimeout;
 
             while (_isRun && !_token.IsCancellationRequested)
             {
                 await ConnectionFrameAsync();
-                await Task.Delay(100, _token);
+                await Task.Delay(LoopDelay, _token);
             }
         }
 
         private async Task ConnectionFrameAsync()
         {
-            // TODO: если прием прошел неудачно
             while (_udpClient.Available > 0)
             {
-                var receiveResult = await _udpClient.ReceiveAsync();
-                await State.ProcessMessageAsync(receiveResult.Buffer);
+                try
+                {
+                    var message = await ReceiveWithTimeOutAsync();
+                    await State.ProcessMessageAsync(message);
+                    _currentAttempts = 0;
+                }
+                catch (OperationCanceledException)
+                {
+                    _currentAttempts++;
+
+                    if (_currentAttempts >= MaxAttempts)
+                    {
+                        throw new ConnectorException("Потеряно соединение с сервером.");
+                    }
+                }
             }
+        }
+
+        private async Task<byte[]> ReceiveWithTimeOutAsync()
+        {
+            var tokenSource = new CancellationTokenSource();
+            var receiveTask = _udpClient.ReceiveAsync().WithCancellation(tokenSource.Token);
+            var delayTask = Task.Delay(ReceiveTimeout, tokenSource.Token);
+            await Task.WhenAny(receiveTask, delayTask);
+            tokenSource.Cancel();
+            return (await receiveTask).Buffer;
         }
     }
 }

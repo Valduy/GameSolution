@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using GameLoops;
@@ -123,7 +124,9 @@ namespace Matchmaker.Services
         {
             lock (_playersEndPoints)
             {
-                if (_playersEndPoints.Count >= PlayersPerMatch)
+                if (_playersEndPoints.Count < PlayersPerMatch) return;
+
+                try
                 {
                     var playersPairs = _playersEndPoints
                         .Take(PlayersPerMatch)
@@ -137,10 +140,14 @@ namespace Matchmaker.Services
 
                     lock (_playerToMatch)
                     {
-                        playersPairs.ForEach(o => _playerToMatch[o.Key] = matchPort);                        
+                        playersPairs.ForEach(o => _playerToMatch[o.Key] = matchPort);
                     }
 
                     playersPairs.ForEach(o => _playersEndPoints.Remove(o.Key));
+                }
+                catch (SocketException ex)
+                {
+                    // TODO: log
                 }
             }
         }

@@ -18,10 +18,19 @@ namespace Connectors.MatchConnectors.States
         {
             if (MessageHelper.GetMessageType(message) == NetworkMessages.Initial)
             {
-                // TODO: JsonExceptions
-                var data = MessageHelper.ToString(message);
-                Context.ConnectionMessage = JsonConvert.DeserializeObject<ConnectionMessage>(data);
-                Context.FinishConnection();
+                try
+                {
+                    var data = MessageHelper.ToString(message);
+                    Context.ConnectionMessage = JsonConvert.DeserializeObject<ConnectionMessage>(data);
+                    Context.FinishConnection();
+                }
+                catch (Exception ex)
+                {
+                    if (ex is JsonReaderException || ex is ArgumentNullException)
+                    {
+                        // TODO: лог о неправильном JSON'е?
+                    }
+                }
             }
 
             await Context.SendMessageAsync(_message);
