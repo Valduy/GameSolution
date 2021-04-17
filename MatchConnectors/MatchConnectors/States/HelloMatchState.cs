@@ -1,47 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Network;
 using Network.Messages;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Connectors.MatchConnectors.States
 {
-    public class HelloMatchState : P2PMatchConnectorStateBase
+    public class HelloMatchState : MatchConnectorStateBase
     {
         private readonly byte[] _message;
 
-        public HelloMatchState(P2PMatchConnector context) : base(context)
+        public HelloMatchState(MatchConnector context) : base(context)
         {
             var privateEndPoint = new ClientEndPoint(Context.Ip, Context.Port);
             var data = JsonConvert.SerializeObject(privateEndPoint);
             _message = MessageHelper.GetMessage(NetworkMessages.Hello, data);
         }
 
-        public override void ProcessMessage(IPEndPoint ip, byte[] message)
+        public override async Task ProcessMessageAsync(byte[] message)
         {
-            // TODO: сервер долго не отвечает
-            switch (MessageHelper.GetMessageType(message))
+            if (IsExpectedMessageType(message))
             {
-                case NetworkMessages.Hello:
-                    // TODO: сервер дал знать, что он все еще жив...
-                    break;
-                case NetworkMessages.Initial:
-                    var data = MessageHelper.ToString(message);
-                    var connectionMessage = JsonConvert.DeserializeObject<ConnectionMessage>(data);
-                    Context.Role = connectionMessage.Role;
-                    Context.PotentialEndPoints = connectionMessage.Clients;
-                    Context.State = new HolePunchingState(Context);
-                    break;
+                Context.State = new WaitMatchState(Context);
             }
+
+            await Context.SendMessageAsync(_message);
         }
 
-        public override async Task SendMessageAsync()
+        private bool IsExpectedMessageType(byte[] message)
         {
-            await Context.SendMessageAsync(_message, Context.ServerIp, Context.ServerPort);
+            var messageType = MessageHelper.GetMessageType(message);
+            return messageType == NetworkMessages.Hello || messageType == NetworkMessages.Initial;
         }
     }
 }

@@ -32,8 +32,8 @@ namespace Matchmaker.Tests.Integration
             Matchmaker = new MatchmakerService(new ListenMatchFactory());
             UdpClient1 = new UdpClient(0);
             UdpClient2 = new UdpClient(0);
-            Port1 = ((IPEndPoint)UdpClient1.Client.LocalEndPoint).Port;
-            Port2 = ((IPEndPoint)UdpClient2.Client.LocalEndPoint).Port;
+            Port1 = UdpClient1.GetPort();
+            Port2 = UdpClient2.GetPort();
         }
 
         public void Dispose()

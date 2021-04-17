@@ -18,7 +18,7 @@ namespace FakeClient
     {
         static async Task Main(string[] args)
         {
-            var connector = new P2PMatchConnector();
+            var connector = new MatchConnector();
             Console.WriteLine("Client started!");
             var result = await connector.ConnectAsync(args[0], int.Parse(args[1]));
             Console.WriteLine($"Role: {result.Role}");

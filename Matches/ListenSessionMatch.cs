@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Matches.States;
+using Network;
 using Network.Messages;
 
 namespace Matches
@@ -49,7 +50,7 @@ namespace Matches
             ExpectedPlayers = playersEndPoints;
             TimeForStarting = timeForStarting;
             _udpClient = new UdpClient(Port);
-            Port = ((IPEndPoint)_udpClient.Client.LocalEndPoint).Port;
+            Port = _udpClient.GetPort();
         }
 
         public async Task WorkAsync(CancellationToken token = default)
@@ -83,13 +84,13 @@ namespace Matches
         {
             while (_timer.ElapsedMilliseconds < TimeForStarting && !_token.IsCancellationRequested)
             {
-                await ReceiveAndAnswerAsync();
+                await ConnectionFrameAsync();
             }
 
             _udpClient.Close();
         }
 
-        private async Task ReceiveAndAnswerAsync()
+        private async Task ConnectionFrameAsync()
         {
             if (_udpClient.Available > 0)
             {
