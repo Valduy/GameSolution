@@ -7,6 +7,7 @@ using GameLoops;
 using Matches;
 using Matchmaker.Factories;
 using Network;
+using Network.Messages;
 
 namespace Matchmaker.Services
 {
@@ -16,8 +17,8 @@ namespace Matchmaker.Services
         private readonly CancellationTokenSource _tokenSource;
         private readonly CancellationToken _token;
 
-        private readonly List<string> _waitingPlayers = new List<string>();
         private readonly List<Task> _matchesTasks = new List<Task>();
+        private readonly Dictionary<string, ClientEndPoints> _playersEndPoints = new Dictionary<string, ClientEndPoints>();
         private readonly Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
 
         private readonly IMatchFactory _matchFactory;
@@ -40,25 +41,25 @@ namespace Matchmaker.Services
             Dispose(false);
         }
 
-        public bool Enqueue(string userId)
+        public bool Enqueue(string userId, ClientEndPoints endPoints)
         {
-            lock (_waitingPlayers)
+            lock (_playersEndPoints)
             {
-                if (_waitingPlayers.Any(o => o == userId))
+                if (_playersEndPoints.ContainsKey(userId))
                 {
                     return false;
                 }
 
-                _waitingPlayers.Add(userId);
+                _playersEndPoints[userId] = endPoints;
                 return true;
             }
         }
 
         public UserStatus GetStatus(string userId)
         {
-            lock (_waitingPlayers)
+            lock (_playersEndPoints)
             {
-                if (_waitingPlayers.Any(o => o == userId))
+                if (_playersEndPoints.ContainsKey(userId))
                 {
                     return UserStatus.Wait;
                 }
@@ -81,7 +82,6 @@ namespace Matchmaker.Services
             {
                 if (_playerToMatch.TryGetValue(userId, out var port))
                 {
-                    _playerToMatch.Remove(userId);
                     return port;
                 }
 
@@ -91,9 +91,9 @@ namespace Matchmaker.Services
 
         public bool Remove(string userId)
         {
-            lock (_waitingPlayers)
+            lock (_playersEndPoints)
             {
-                return _waitingPlayers.Remove(userId);
+                return _playersEndPoints.Remove(userId);
             }
         }
 
@@ -121,26 +121,35 @@ namespace Matchmaker.Services
 
         private void ManageMatchmaking(double dt)
         {
-            lock (_waitingPlayers)
+            lock (_playersEndPoints)
             {
-                if (_waitingPlayers.Count >= PlayersPerMatch)
+                if (_playersEndPoints.Count >= PlayersPerMatch)
                 {
-                    var match = _matchFactory.CreateMatch(PlayersPerMatch);
-                    match.MatchStarted += OnMatchStarted;
-                    ConfigureMatchTask(match);
+                    var playersPairs = _playersEndPoints
+                        .Take(PlayersPerMatch)
+                        .ToList();
 
-                    for (int i = 0; i < PlayersPerMatch; i++)
+                    var playersEndPoints = playersPairs
+                        .Select(o => o.Value)
+                        .ToList();
+
+                    var matchPort = StartNewMatch(playersEndPoints);
+
+                    lock (_playerToMatch)
                     {
-                        var player = _waitingPlayers.Last();
-                        _playerToMatch[player] = match.Port;
-                        _waitingPlayers.Remove(player);
+                        playersPairs.ForEach(o => _playerToMatch[o.Key] = matchPort);                        
                     }
+
+                    playersPairs.ForEach(o => _playersEndPoints.Remove(o.Key));
                 }
             }
         }
 
-        private void ConfigureMatchTask(IMatch match)
+        private int StartNewMatch(IReadOnlyCollection<ClientEndPoints> playersEndPoints)
         {
+            var match = _matchFactory.CreateMatch(playersEndPoints);
+            match.MatchStarted += OnMatchStarted;
+
             var matchTask = new Task(async () => await match.WorkAsync(_token), _token);
             matchTask.ContinueWith(OnMatchTaskEnded, _token);
 
@@ -150,6 +159,7 @@ namespace Matchmaker.Services
             }
 
             matchTask.Start();
+            return match.Port;
         }
 
         private void OnMatchStarted(IMatch match)

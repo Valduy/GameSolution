@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -9,24 +11,30 @@ namespace Matches.States
 {
     public class WaitClientState : ListenSessionStateBase
     {
-        public WaitClientState(ListenSessionMatch context) : base(context)
-        {
-        }
+        private readonly int _playersCount;
+
+        public WaitClientState(ListenSessionMatch context)
+            : base(context) 
+            => _playersCount = context.ExpectedPlayers.Count();
 
         public override async Task ProcessMessageAsync(IPEndPoint ip, byte[] received)
         {
             if (MessageHelper.GetMessageType(received) == NetworkMessages.Hello)
             {
-                if (!IsClient(ip))
+                if (IsClient(ip))
+                {
+                    await Context.SendMessageAsync(MessageHelper.GetMessage(NetworkMessages.Hello), ip);
+                }
+                else
                 {
                     try
                     {
-                        Context.AddClient(CreateClientEndPoints(ip, received));
+                        var clientEndPoints = CreateClientEndPoints(ip, received);
 
-                        if (Context.Clients.Count >= Context.PlayersCount)
+                        if (IsExpected(clientEndPoints))
                         {
-                            Context.State = new ChooseHostState(Context);
-                            Context.NotifyThatStarted();
+                            Context.AddClient(clientEndPoints);
+                            TryChangeState();
                             await Context.SendMessageAsync(MessageHelper.GetMessage(NetworkMessages.Hello), ip);
                         }
                     }
@@ -38,8 +46,6 @@ namespace Matches.States
                         }
                     }
                 }
-
-                await Context.SendMessageAsync(MessageHelper.GetMessage(NetworkMessages.Hello), ip);
             }
         }
 
@@ -55,6 +61,18 @@ namespace Matches.States
                 privateEndPoint.Ip,
                 privateEndPoint.Port
             );
+        }
+
+        private bool IsExpected(ClientEndPoints endPoints)
+            => Context.ExpectedPlayers.Any(o => o.IsSameSocket(endPoints));
+
+        private void TryChangeState()
+        {
+            if (Context.Clients.Count >= _playersCount)
+            {
+                Context.State = new ChooseHostState(Context);
+                Context.NotifyThatStarted();
+            }
         }
     }
 }

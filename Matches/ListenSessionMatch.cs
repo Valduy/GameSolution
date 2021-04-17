@@ -19,7 +19,7 @@ namespace Matches
         private ClientEndPoints _host;
         private Stopwatch _timer;
         
-        public int PlayersCount { get; }
+        public IEnumerable<ClientEndPoints> ExpectedPlayers { get; }
         public int Port { get; }
         public long TimeForStarting { get; }
 
@@ -32,21 +32,21 @@ namespace Matches
 
         public event Action<IMatch> MatchStarted;
 
-        public ListenSessionMatch(int playersCount) 
-            : this(playersCount, 0)
+        public ListenSessionMatch(IEnumerable<ClientEndPoints> playersEndPoints) 
+            : this(playersEndPoints, 0)
         { }
 
-        public ListenSessionMatch(int playersCount, int port) 
-            : this(playersCount, 30000, port)
+        public ListenSessionMatch(IEnumerable<ClientEndPoints> playersEndPoints, int port) 
+            : this(playersEndPoints, 30000, port)
         { }
 
-        public ListenSessionMatch(int playersCount, long timeForStarting) 
-            : this(playersCount, timeForStarting, 0)
+        public ListenSessionMatch(IEnumerable<ClientEndPoints> playersEndPoints, long timeForStarting) 
+            : this(playersEndPoints, timeForStarting, 0)
         { }
 
-        public ListenSessionMatch(int playersCount, long timeForStarting, int port)
+        public ListenSessionMatch(IEnumerable<ClientEndPoints> playersEndPoints, long timeForStarting, int port)
         {
-            PlayersCount = playersCount;
+            ExpectedPlayers = playersEndPoints;
             TimeForStarting = timeForStarting;
             _udpClient = new UdpClient(Port);
             Port = ((IPEndPoint)_udpClient.Client.LocalEndPoint).Port;

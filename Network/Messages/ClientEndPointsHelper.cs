@@ -16,6 +16,10 @@ namespace Network.Messages
             => thisEndPoints.PublicEndPoint.IsSame(otherEndPoints.PublicEndPoint)
                && thisEndPoints.PrivateEndPoint.IsSame(otherEndPoints.PrivateEndPoint);
 
+        public static bool IsSameSocket(this ClientEndPoints thisEndPoints, ClientEndPoints otherEndPoints) 
+            => thisEndPoints.PrivateEndPoint.IsSame(otherEndPoints.PrivateEndPoint)
+               && thisEndPoints.PublicEndPoint.Ip == otherEndPoints.PublicEndPoint.Ip;
+
         public static bool IsClientPublicEndPoint(this ClientEndPoints endPoints, IPEndPoint otherEndPoint)
             => endPoints.PublicEndPoint.IsSame(otherEndPoint);
 

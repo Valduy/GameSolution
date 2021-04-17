@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Network.Messages;
 
 namespace Matches
 {
     public interface IMatch
     {
         int Port { get; }
-        int PlayersCount { get; }
+        IEnumerable<ClientEndPoints> ExpectedPlayers { get; }
 
         event Action<IMatch> MatchStarted;
         

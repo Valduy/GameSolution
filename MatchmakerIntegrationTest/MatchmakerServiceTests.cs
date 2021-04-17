@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -74,9 +73,14 @@ namespace Matchmaker.Tests.Integration
         public void Enqueue_UserId_ReturnUserStatusWait()
         {
             // Arrange
+            var publicIp = IPAddress.Loopback.ToString();
+            var privateIp = NetworkHelper.GetLocalIPAddress();
+            var publicPort = 0;
+            var privatePort = _fixture.Port1;
+            var endPoints1 = new ClientEndPoints(publicIp, publicPort, privateIp, privatePort);
 
             // Act
-            _fixture.Matchmaker.Enqueue(_fixture.UserId1);
+            _fixture.Matchmaker.Enqueue(_fixture.UserId1, endPoints1);
             var status1 = _fixture.Matchmaker.GetStatus(_fixture.UserId1);
 
             // Assert
@@ -87,9 +91,14 @@ namespace Matchmaker.Tests.Integration
         public async Task GetStatus_UsersId_ReturnUsersStatusesConnected()
         {
             // Arrange
+            var publicIp = IPAddress.Loopback.ToString();
+            var privateIp = NetworkHelper.GetLocalIPAddress();
+            var publicPort = 0;
+            var privatePort = _fixture.Port2;
+            var endPoints2 = new ClientEndPoints(publicIp, publicPort, privateIp, privatePort);
 
             // Act
-            _fixture.Matchmaker.Enqueue(_fixture.UserId2);
+            _fixture.Matchmaker.Enqueue(_fixture.UserId2, endPoints2);
             await Task.Delay(_fixture.Delay);
             var status1 = _fixture.Matchmaker.GetStatus(_fixture.UserId1);
             var status2 = _fixture.Matchmaker.GetStatus(_fixture.UserId2);
@@ -115,7 +124,7 @@ namespace Matchmaker.Tests.Integration
         }
 
         [Fact, TestPriority(4)]
-        public async Task MatchWork_HelloMessagesWithPrivateEndPoints_ConnectionMessages()
+        public async Task MatchWork_InitialMessagesWithPrivateEndPoints_ReturnConnectionMessages()
         {
             // Arrange
             var message1 = GetMatchMessage(NetworkHelper.GetLocalIPAddress(), _fixture.Port1);

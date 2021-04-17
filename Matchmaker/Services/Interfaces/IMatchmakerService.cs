@@ -1,4 +1,5 @@
 ﻿using Network;
+using Network.Messages;
 
 namespace Matchmaker.Services
 {
@@ -12,7 +13,7 @@ namespace Matchmaker.Services
         /// </summary>
         /// <param name="userId">идентификатор пользователя.</param>
         /// <returns>true, если пользователь был добавлен в очередь, false в противном случае.</returns>
-        bool Enqueue(string userId);
+        bool Enqueue(string userId, ClientEndPoints endPoints);
         /// <summary>
         /// Метод позволяет узнать статус пользователя.
         /// </summary>

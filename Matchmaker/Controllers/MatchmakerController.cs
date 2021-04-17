@@ -3,6 +3,7 @@ using Matchmaker.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Network;
+using Network.Messages;
 
 namespace Matchmaker.Controllers
 {
@@ -18,11 +19,14 @@ namespace Matchmaker.Controllers
         }
 
         [Authorize]
-        [HttpGet("enqueue")]
-        public void Enqueue()
+        [HttpPost("enqueue")]
+        public void Enqueue([FromBody]ClientEndPoint privateEndPoint)
         {
             var userId = User.GetName();
-            _matchmakerService.Enqueue(userId);
+            var publicIp = HttpContext.Connection.RemoteIpAddress;
+            var publicEndPoint = new ClientEndPoint(publicIp.ToString(), 0);
+            var endPoints = new ClientEndPoints(publicEndPoint, privateEndPoint);
+            _matchmakerService.Enqueue(userId, endPoints);
         }
 
         [Authorize]
