@@ -5,18 +5,24 @@ using System.Threading.Tasks;
 
 namespace GameLoops
 {
-    public class FixedFpsGameLoop : FixedFpsGameLoopBase
+    public class FixedFpsGameLoop
     {
         private readonly Action<double> _gameFrame;
 
         private CancellationTokenSource _tokenSource;
         private CancellationToken _token;
 
-        public FixedFpsGameLoop(Action<double> gameFrame, uint fps) 
-            : base (fps) 
-            => _gameFrame = gameFrame;
+        public long Dt { get; }
+        public double Frame { get; }
 
-        public override void Start()
+        public FixedFpsGameLoop(Action<double> gameFrame, uint fps)
+        {
+            _gameFrame = gameFrame;
+            Dt = 1000 / fps;
+            Frame = (double)Dt / 1000;
+        }
+
+        public void Start()
         {
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;
@@ -49,7 +55,7 @@ namespace GameLoops
             }, _token);
         }
 
-        public override void Stop()
+        public void Stop()
         {
             _tokenSource?.Cancel();
             _tokenSource = null;

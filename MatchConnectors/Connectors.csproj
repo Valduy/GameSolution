@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="MatchmakerConnectors\" />
+    <Folder Include="MatchmakerConnectors\Implementations\" />
   </ItemGroup>
 
   <ItemGroup>

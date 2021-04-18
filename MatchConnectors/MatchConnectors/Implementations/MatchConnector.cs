@@ -8,7 +8,7 @@ using Network.Messages;
 
 namespace Connectors.MatchConnectors
 {
-    public class MatchConnector : IMatchConnectorBase
+    public class MatchConnector : IMatchConnector
     {
         private const int LoopDelay = 100;
         private const int ReceiveTimeout = 100;

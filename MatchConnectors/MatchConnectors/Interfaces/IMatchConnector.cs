@@ -5,7 +5,7 @@ using Network.Messages;
 
 namespace Connectors.MatchConnectors
 {
-    public interface IMatchConnectorBase
+    public interface IMatchConnector
     {
         Task<ConnectionMessage> ConnectAsync(UdpClient client, string serverIp, int serverPort, CancellationToken token = default);
     }
