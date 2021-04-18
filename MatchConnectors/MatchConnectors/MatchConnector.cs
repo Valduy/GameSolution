@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,7 +50,6 @@ namespace Connectors.MatchConnectors
         private async Task ConnectionLoopAsync()
         {
             _isRun = true;
-            _udpClient.Client.ReceiveTimeout = ReceiveTimeout;
 
             while (_isRun && !_token.IsCancellationRequested)
             {
@@ -63,13 +62,12 @@ namespace Connectors.MatchConnectors
         {
             while (_udpClient.Available > 0)
             {
-                try
+                if (TryReceive(out var message))
                 {
-                    var message = await ReceiveWithTimeOutAsync();
                     await State.ProcessMessageAsync(message);
                     _currentAttempts = 0;
                 }
-                catch (OperationCanceledException)
+                else
                 {
                     _currentAttempts++;
 
@@ -81,14 +79,28 @@ namespace Connectors.MatchConnectors
             }
         }
 
-        private async Task<byte[]> ReceiveWithTimeOutAsync()
+        private bool TryReceive(out byte[] message)
         {
-            var tokenSource = new CancellationTokenSource();
-            var receiveTask = _udpClient.ReceiveAsync().WithCancellation(tokenSource.Token);
-            var delayTask = Task.Delay(ReceiveTimeout, tokenSource.Token);
-            await Task.WhenAny(receiveTask, delayTask);
-            tokenSource.Cancel();
-            return (await receiveTask).Buffer;
+            try
+            {
+                SetSocketTimeout();
+                IPEndPoint endPoint = null;
+                message = _udpClient.Receive(ref endPoint);
+                ResetSocketTimeout();
+                return true;
+            }
+            catch (SocketException)
+            {
+                ResetSocketTimeout();
+                message = null;
+                return false;
+            }
         }
+
+        private void SetSocketTimeout() 
+            => _udpClient.Client.ReceiveTimeout = ReceiveTimeout;
+
+        private void ResetSocketTimeout() 
+            => _udpClient.Client.ReceiveTimeout = 0;
     }
 }
