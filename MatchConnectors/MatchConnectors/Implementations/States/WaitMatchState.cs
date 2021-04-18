@@ -14,7 +14,10 @@ namespace Connectors.MatchConnectors.States
             : base(context) 
             => _message = MessageHelper.GetMessage(NetworkMessages.Hello);
 
-        public override async Task ProcessMessageAsync(byte[] message)
+        public override async Task SendMessageAsync() 
+            => await Context.SendMessageAsync(_message);
+
+        public override void ProcessMessage(byte[] message)
         {
             if (MessageHelper.GetMessageType(message) == NetworkMessages.Initial)
             {
@@ -32,8 +35,6 @@ namespace Connectors.MatchConnectors.States
                     }
                 }
             }
-
-            await Context.SendMessageAsync(_message);
         }
     }
 }

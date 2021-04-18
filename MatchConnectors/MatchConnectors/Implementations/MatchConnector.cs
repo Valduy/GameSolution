@@ -60,11 +60,13 @@ namespace Connectors.MatchConnectors
 
         private async Task ConnectionFrameAsync()
         {
+            await State.SendMessageAsync();
+
             while (_udpClient.Available > 0)
             {
                 if (TryReceive(out var message))
                 {
-                    await State.ProcessMessageAsync(message);
+                    State.ProcessMessage(message);
                     _currentAttempts = 0;
                 }
                 else

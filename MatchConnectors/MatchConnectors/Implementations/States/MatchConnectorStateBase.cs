@@ -13,6 +13,7 @@ namespace Connectors.MatchConnectors.States
         public MatchConnectorStateBase(MatchConnector context) 
             => Context = context;
 
-        public abstract Task ProcessMessageAsync(byte[] message);
+        public abstract Task SendMessageAsync();
+        public abstract void ProcessMessage(byte[] message);
     }
 }

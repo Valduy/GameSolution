@@ -16,14 +16,15 @@ namespace Connectors.MatchConnectors.States
             _message = MessageHelper.GetMessage(NetworkMessages.Hello, data);
         }
 
-        public override async Task ProcessMessageAsync(byte[] message)
+        public override async Task SendMessageAsync() 
+            => await Context.SendMessageAsync(_message);
+
+        public override void ProcessMessage(byte[] message)
         {
             if (IsExpectedMessageType(message))
             {
                 Context.State = new WaitMatchState(Context);
             }
-
-            await Context.SendMessageAsync(_message);
         }
 
         private bool IsExpectedMessageType(byte[] message)
