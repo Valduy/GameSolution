@@ -44,7 +44,7 @@ namespace Matchmaker.Controllers
         /// <see cref="OkResult"/>, если регистрация прошла успешно.
         /// </returns>
         /// <exception cref="HttpStatusException">Выбрасывается, когда логин уже занят.</exception>
-        [HttpPost("register")]
+        [HttpPost("registration")]
         public async Task<IActionResult> Register([FromBody]UserViewModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -62,7 +62,7 @@ namespace Matchmaker.Controllers
             return Ok();
         }
 
-        [HttpPost("authorize")]
+        [HttpPost("authorisation")]
         public async Task<IActionResult> Authorize([FromBody] UserViewModel model)
         {
             var identity = await GetIdentity(model);

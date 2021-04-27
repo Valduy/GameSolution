@@ -4,9 +4,9 @@ using Network;
 using Network.Messages;
 using Newtonsoft.Json;
 
-namespace Connectors.MatchConnectors.States
+namespace Connectors.MatchConnectors
 {
-    public class WaitMatchState : MatchConnectorStateBase
+    internal class WaitMatchState : MatchConnectorStateBase
     {
         private readonly byte[] _message;
 

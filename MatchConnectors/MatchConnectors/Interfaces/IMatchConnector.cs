@@ -7,6 +7,7 @@ namespace Connectors.MatchConnectors
 {
     public interface IMatchConnector
     {
-        Task<ConnectionMessage> ConnectAsync(UdpClient client, string serverIp, int serverPort, CancellationToken token = default);
+        Task<ConnectionMessage> ConnectAsync(UdpClient client, string serverIp, int serverPort,
+            CancellationToken cancellationToken = default);
     }
 }

@@ -16,7 +16,7 @@ namespace Matchmaker.Services
     {
         private readonly FixedFpsGameLoop _matchmakingLoop;
         private readonly CancellationTokenSource _tokenSource;
-        private readonly CancellationToken _token;
+        private readonly CancellationToken _cancellationToken;
 
         private readonly List<Task> _matchesTasks = new List<Task>();
         private readonly Dictionary<string, ClientEndPoints> _playersEndPoints = new Dictionary<string, ClientEndPoints>();
@@ -33,7 +33,7 @@ namespace Matchmaker.Services
             _matchFactory = matchFactory;
             _matchmakingLoop = new FixedFpsGameLoop(ManageMatchmaking, 60);
             _tokenSource = new CancellationTokenSource();
-            _token = _tokenSource.Token;
+            _cancellationToken = _tokenSource.Token;
             _matchmakingLoop.Start();
         }
 
@@ -156,16 +156,15 @@ namespace Matchmaker.Services
         {
             var match = _matchFactory.CreateMatch(playersEndPoints);
             match.MatchStarted += OnMatchStarted;
-
-            var matchTask = new Task(async () => await match.WorkAsync(_token), _token);
-            matchTask.ContinueWith(OnMatchTaskEnded, _token);
-
+            
             lock (_matchesTasks)
             {
+                var matchTask = new Task(async () => await match.WorkAsync(_cancellationToken), _cancellationToken)
+                    .ContinueWith(OnMatchTaskEnded, _cancellationToken);
                 _matchesTasks.Add(matchTask);
+                matchTask.Start();
             }
 
-            matchTask.Start();
             return match.Port;
         }
 

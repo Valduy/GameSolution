@@ -4,9 +4,9 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Connectors.MatchConnectors.States
+namespace Connectors.MatchConnectors
 {
-    public abstract class MatchConnectorStateBase
+    internal abstract class MatchConnectorStateBase
     {
         protected MatchConnector Context { get; }
 

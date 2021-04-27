@@ -2,7 +2,6 @@
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Connectors.MatchConnectors.States;
 using Network;
 using Network.Messages;
 
@@ -17,7 +16,7 @@ namespace Connectors.MatchConnectors
         private bool _isRun;
         private int _currentAttempts;
         private UdpClient _udpClient;
-        private CancellationToken _token;
+        private CancellationToken _cancellationToken;
 
         public string ServerIp { get; private set; }
         public int ServerPort { get; private set; }
@@ -26,12 +25,16 @@ namespace Connectors.MatchConnectors
         internal ConnectionMessage ConnectionMessage { get; set; }
         internal MatchConnectorStateBase State { get; set; }
 
-        public async Task<ConnectionMessage> ConnectAsync(UdpClient client, string serverIp, int serverPort, CancellationToken token = default)
+        public async Task<ConnectionMessage> ConnectAsync(
+            UdpClient client,
+            string serverIp,
+            int serverPort,
+            CancellationToken cancellationToken = default)
         {
             ServerIp = serverIp;
             ServerPort = serverPort;
             _udpClient = client;
-            _token = token;
+            _cancellationToken = cancellationToken;
             Ip = NetworkHelper.GetLocalIPAddress();
             Port = client.GetPort();
             State = new HelloMatchState(this);
@@ -42,19 +45,16 @@ namespace Connectors.MatchConnectors
         internal async Task SendMessageAsync(byte[] message)
             => await _udpClient.SendAsync(message, message.Length, ServerIp, ServerPort);
 
-        internal void FinishConnection()
-        {
-            _isRun = false;
-        }
+        internal void FinishConnection() => _isRun = false;
 
         private async Task ConnectionLoopAsync()
         {
             _isRun = true;
 
-            while (_isRun && !_token.IsCancellationRequested)
+            while (_isRun && !_cancellationToken.IsCancellationRequested)
             {
                 await ConnectionFrameAsync();
-                await Task.Delay(LoopDelay, _token);
+                await Task.Delay(LoopDelay, _cancellationToken);
             }
         }
 

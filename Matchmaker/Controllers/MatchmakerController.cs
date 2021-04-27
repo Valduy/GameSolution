@@ -19,7 +19,7 @@ namespace Matchmaker.Controllers
         }
 
         [Authorize]
-        [HttpPost("enqueue")]
+        [HttpPost("queue")]
         public void Enqueue([FromBody]ClientEndPoint privateEndPoint)
         {
             var userId = User.GetName();
@@ -30,7 +30,7 @@ namespace Matchmaker.Controllers
         }
 
         [Authorize]
-        [HttpGet("status/get")]
+        [HttpGet("status")]
         public UserStatus GetStatus()
         {
             var userId = User.GetName();
@@ -38,7 +38,7 @@ namespace Matchmaker.Controllers
         }
 
         [Authorize]
-        [HttpGet("match/get")]
+        [HttpGet("match")]
         public int? GetMatch()
         {
             var userId = User.GetName();
@@ -46,7 +46,7 @@ namespace Matchmaker.Controllers
         }
 
         [Authorize]
-        [HttpGet("remove")]
+        [HttpDelete("queue")]
         public bool Remove()
         {
             var userId = User.GetName();

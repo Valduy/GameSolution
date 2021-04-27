@@ -1,10 +1,15 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Network.Messages;
 
-namespace Connectors.MatchmakerConnectors.Interfaces
+namespace Connectors.MatchmakerConnectors
 {
-    interface IMatchmakerConnector
+    public interface IMatchmakerConnector
     {
-        Task<int> ConnectAsync(int port, string authToken, CancellationToken token = default);
+        Task<int?> ConnectAsync(
+            ClientEndPoint privateEndPoint,
+            string host,
+            string bearerToken,
+            CancellationToken cancellationToken = default);
     }
 }
