@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Network;
 
 namespace Connectors.MatchmakerConnectors.Implementations.States
@@ -27,8 +24,13 @@ namespace Connectors.MatchmakerConnectors.Implementations.States
 
         private async Task<UserStatus> GetUserStatus()
         {
-            // TODO: некорректный ответ
             var response = await Context.GetAsync("api/status");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpConnectorException("Не удалось получить статус пользователя", response.StatusCode);
+            }
+
             var data = await response.Content.ReadAsStringAsync();
             return (UserStatus)int.Parse(data);
         }

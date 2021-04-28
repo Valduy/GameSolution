@@ -22,7 +22,6 @@ namespace Connectors.MatchmakerConnectors
 
         internal MatchmakerConnectorStateBase State { get; set; }
         internal int? MatchPort { get; set; }
-        internal bool IsCancelled => _cancellationToken.IsCancellationRequested;
 
         public async Task<int?> ConnectAsync(
             ClientEndPoint privateEndPoint,
@@ -41,7 +40,7 @@ namespace Connectors.MatchmakerConnectors
             return MatchPort;
         }
 
-        internal async Task PostAsync(string uri, string json) 
+        internal async Task<HttpResponseMessage> PostAsync(string uri, string json) 
             => await _client.PostAsync(
                 uri, 
                 new StringContent(json, Encoding.ASCII, "application/json"), 

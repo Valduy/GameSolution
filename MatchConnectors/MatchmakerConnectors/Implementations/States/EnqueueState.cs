@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -16,8 +15,16 @@ namespace Connectors.MatchmakerConnectors.Implementations.States
 
         public override async Task ConnectAsync()
         {
-            await Context.PostAsync("api/queue", _json);
-            Context.State = new WaitState(Context);
+            var response = await Context.PostAsync("api/queue", _json);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Context.State = new WaitState(Context);
+            }
+            else
+            {
+                throw new HttpConnectorException("Не удалось встать в очередь", response.StatusCode);
+            }
         }
     }
 }

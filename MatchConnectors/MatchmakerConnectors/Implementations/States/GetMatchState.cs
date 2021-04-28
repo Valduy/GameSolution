@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Connectors.MatchmakerConnectors.Implementations.States
 {
@@ -27,8 +24,13 @@ namespace Connectors.MatchmakerConnectors.Implementations.States
 
         private async Task<int?> GetMatchPort()
         {
-            // TODO: некорректный ответ
             var response = await Context.GetAsync("api/match");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpConnectorException("Не удалось получить порт матча", response.StatusCode);
+            }
+
             var data = await response.Content.ReadAsStringAsync();
             return int.TryParse(data, out var number) ? (int?)number : null;
         }
