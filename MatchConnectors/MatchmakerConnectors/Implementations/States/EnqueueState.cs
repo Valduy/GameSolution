@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace Connectors.MatchmakerConnectors.Implementations.States
+namespace Connectors.MatchmakerConnectors
 {
     internal class EnqueueState : MatchmakerConnectorStateBase
     {

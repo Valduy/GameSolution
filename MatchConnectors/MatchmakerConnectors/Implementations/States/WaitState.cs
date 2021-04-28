@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Network;
 
-namespace Connectors.MatchmakerConnectors.Implementations.States
+namespace Connectors.MatchmakerConnectors
 {
     internal class WaitState : MatchmakerConnectorStateBase
     {

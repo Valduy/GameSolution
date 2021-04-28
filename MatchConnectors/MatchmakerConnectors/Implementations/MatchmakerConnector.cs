@@ -4,7 +4,6 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Connectors.MatchmakerConnectors.Implementations.States;
 using Network.Messages;
 
 namespace Connectors.MatchmakerConnectors
@@ -60,6 +59,9 @@ namespace Connectors.MatchmakerConnectors
                 await ConnectionFrameAsync();
                 await Task.Delay(LoopDelay, _cancellationToken);
             }
+
+            // TODO: сообщение о выходе из очереди
+            _client.Dispose();
         }
 
         private async Task ConnectionFrameAsync()

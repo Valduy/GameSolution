@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Connectors.MatchmakerConnectors.Implementations.States
+namespace Connectors.MatchmakerConnectors
 {
     internal class GetMatchState : MatchmakerConnectorStateBase
     {
