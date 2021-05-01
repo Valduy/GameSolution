@@ -15,7 +15,7 @@ namespace Matches
     public class ListenSessionMatch : IMatch, IDisposable
     {
         private UdpClient _udpClient;
-        private CancellationToken _token;
+        private CancellationToken _cancellationToken;
         private List<ClientEndPoints> _clients;
         private ClientEndPoints _host;
         private Stopwatch _timer;
@@ -53,9 +53,9 @@ namespace Matches
             Port = _udpClient.GetPort();
         }
 
-        public async Task WorkAsync(CancellationToken token = default)
+        public async Task WorkAsync(CancellationToken cancellationToken = default)
         {
-            _token = token;
+            _cancellationToken = cancellationToken;
             _host = null;
             _clients = new List<ClientEndPoints>();
             _timer = new Stopwatch();
@@ -82,8 +82,9 @@ namespace Matches
 
         private async Task ConnectionLoopAsync()
         {
-            while (_timer.ElapsedMilliseconds < TimeForStarting && !_token.IsCancellationRequested)
+            while (_timer.ElapsedMilliseconds < TimeForStarting)
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 await ConnectionFrameAsync();
             }
 

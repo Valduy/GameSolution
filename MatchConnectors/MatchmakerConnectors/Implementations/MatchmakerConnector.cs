@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
@@ -11,6 +10,7 @@ namespace Connectors.MatchmakerConnectors
     public class MatchmakerConnector : IMatchmakerConnector
     {
         private const int LoopDelay = 1000;
+        private const int TimeForNotification = 1000;
 
         private bool _isRun;
         private HttpClient _client;
@@ -54,19 +54,35 @@ namespace Connectors.MatchmakerConnectors
         {
             _isRun = true;
 
-            while (_isRun && !_cancellationToken.IsCancellationRequested)
+            try
             {
-                await ConnectionFrameAsync();
-                await Task.Delay(LoopDelay, _cancellationToken);
+                while (_isRun)
+                {
+                    _cancellationToken.ThrowIfCancellationRequested();
+                    await State.ConnectAsync();
+                    await Task.Delay(LoopDelay, _cancellationToken);
+                }
             }
+            finally
+            {
+                if (_cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await NotifyAboutCancellation(TimeForNotification);
+                    }
+                    catch (TaskCanceledException) { }
+                }
 
-            // TODO: сообщение о выходе из очереди
-            _client.Dispose();
+                _client.Dispose();
+            }
         }
 
-        private async Task ConnectionFrameAsync()
+        private async Task NotifyAboutCancellation(int timeout)
         {
-            await State.ConnectAsync();
+            var tokenSource = new CancellationTokenSource();
+            tokenSource.CancelAfter(timeout);
+            await _client.DeleteAsync($"{Host}/api/queue", tokenSource.Token);
         }
     }
 }

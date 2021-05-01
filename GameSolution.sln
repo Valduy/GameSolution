@@ -37,7 +37,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Matchmaker.Tests.Integratio
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Orderers", "Orderers\Orderers.csproj", "{DBBBF107-89A0-4E95-A334-650E234812F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Connectors.Tests.Integration", "Connectors.Tests.Integration\Connectors.Tests.Integration.csproj", "{FF5EB1C0-8678-45D5-ABB8-006FB9A86D78}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Connectors.Tests.Integration", "Connectors.Tests.Integration\Connectors.Tests.Integration.csproj", "{FF5EB1C0-8678-45D5-ABB8-006FB9A86D78}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

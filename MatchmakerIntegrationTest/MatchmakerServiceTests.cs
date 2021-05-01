@@ -10,7 +10,6 @@ using System.Text.Json;
 using Matchmaker.Factories.Implementations;
 using Orderers.Attributes;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Matchmaker.Tests.Integration
 {
@@ -48,13 +47,8 @@ namespace Matchmaker.Tests.Integration
     public class MatchmakerServiceTests : IClassFixture<MatchmakerServiceFixture>
     {
         private readonly MatchmakerServiceFixture _fixture;
-        private readonly ITestOutputHelper _testOutputHelper;
 
-        public MatchmakerServiceTests(MatchmakerServiceFixture fixture, ITestOutputHelper testOutputHelper)
-        {
-            _fixture = fixture;
-            _testOutputHelper = testOutputHelper;
-        }
+        public MatchmakerServiceTests(MatchmakerServiceFixture fixture) => _fixture = fixture;
 
         [Fact, TestPriority(0)]
         public void GetStatus_UserId_ReturnUserStatusAbsent()

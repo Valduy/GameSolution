@@ -13,6 +13,6 @@ namespace Matches
 
         event Action<IMatch> MatchStarted;
         
-        Task WorkAsync(CancellationToken token = default);
+        Task WorkAsync(CancellationToken cancellationToken = default);
     }
 }

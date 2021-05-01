@@ -51,8 +51,9 @@ namespace Connectors.MatchConnectors
         {
             _isRun = true;
 
-            while (_isRun && !_cancellationToken.IsCancellationRequested)
+            while (_isRun)
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 await ConnectionFrameAsync();
                 await Task.Delay(LoopDelay, _cancellationToken);
             }
@@ -88,14 +89,16 @@ namespace Connectors.MatchConnectors
                 SetSocketTimeout();
                 IPEndPoint endPoint = null;
                 message = _udpClient.Receive(ref endPoint);
-                ResetSocketTimeout();
                 return true;
             }
             catch (SocketException)
             {
-                ResetSocketTimeout();
                 message = null;
                 return false;
+            }
+            finally
+            {
+                ResetSocketTimeout();
             }
         }
 

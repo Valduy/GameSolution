@@ -24,7 +24,7 @@ namespace Connectors.MatchmakerConnectors
 
         private async Task<UserStatus> GetUserStatus()
         {
-            var response = await Context.GetAsync("api/status");
+            var response = await Context.GetAsync($"{Context.Host}/api/status");
 
             if (!response.IsSuccessStatusCode)
             {

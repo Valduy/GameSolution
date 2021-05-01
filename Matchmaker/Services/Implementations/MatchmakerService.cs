@@ -12,13 +12,13 @@ using Network.Messages;
 
 namespace Matchmaker.Services
 {
+    // TODO: чистка давно не дававших о себе знать пользователей
     public class MatchmakerService : IMatchmakerService, IDisposable
     {
         private readonly FixedFpsGameLoop _matchmakingLoop;
         private readonly CancellationTokenSource _tokenSource;
         private readonly CancellationToken _cancellationToken;
 
-        private readonly List<Task> _matchesTasks = new List<Task>();
         private readonly Dictionary<string, ClientEndPoints> _playersEndPoints = new Dictionary<string, ClientEndPoints>();
         private readonly Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
 
@@ -111,12 +111,6 @@ namespace Matchmaker.Services
 
             _matchmakingLoop.Stop();
             _tokenSource.Cancel();
-
-            lock (_matchesTasks)
-            {
-                Task.WaitAll(_matchesTasks.ToArray());
-            }
-
             _disposed = true;
         }
 
@@ -128,13 +122,8 @@ namespace Matchmaker.Services
 
                 try
                 {
-                    var playersPairs = _playersEndPoints
-                        .Take(PlayersPerMatch)
-                        .ToList();
-
-                    var playersEndPoints = playersPairs
-                        .Select(o => o.Value)
-                        .ToList();
+                    var playersPairs = _playersEndPoints.Take(PlayersPerMatch).ToList();
+                    var playersEndPoints = playersPairs.Select(o => o.Value).ToList();
 
                     var matchPort = StartNewMatch(playersEndPoints);
 
@@ -156,15 +145,7 @@ namespace Matchmaker.Services
         {
             var match = _matchFactory.CreateMatch(playersEndPoints);
             match.MatchStarted += OnMatchStarted;
-            
-            lock (_matchesTasks)
-            {
-                var matchTask = new Task(async () => await match.WorkAsync(_cancellationToken), _cancellationToken)
-                    .ContinueWith(OnMatchTaskEnded, _cancellationToken);
-                _matchesTasks.Add(matchTask);
-                matchTask.Start();
-            }
-
+            Task.Run(async () => await match.WorkAsync(_cancellationToken), _cancellationToken);
             return match.Port;
         }
 
@@ -180,14 +161,6 @@ namespace Matchmaker.Services
                 {
                     _playerToMatch.Remove(player);
                 }
-            }
-        }
-
-        private void OnMatchTaskEnded(Task task)
-        {
-            lock (_matchesTasks)
-            {
-                _matchesTasks.Remove(task);
             }
         }
     }
