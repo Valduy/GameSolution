@@ -34,6 +34,8 @@ namespace Matches.States
         {
             if (MessageHelper.GetMessageType(received) == NetworkMessages.Hello)
             {
+                Context.LogInformation("Соединение...");
+
                 if (IsHost(ip))
                 {
                     await Context.SendMessageAsync(_hostMessage, ip);
@@ -42,6 +44,10 @@ namespace Matches.States
                 {
                     await Context.SendMessageAsync(_clientMessage, ip);
                 }
+            }
+            else
+            {
+                Context.LogInformation("Пришло неизвестное сообщение.");
             }
         }
     }

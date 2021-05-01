@@ -39,6 +39,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Orderers", "Orderers\Ordere
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Connectors.Tests.Integration", "Connectors.Tests.Integration\Connectors.Tests.Integration.csproj", "{FF5EB1C0-8678-45D5-ABB8-006FB9A86D78}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FakeMatchmakerConnection", "FakeMatchmakerConnection\FakeMatchmakerConnection.csproj", "{3A9FC04E-B299-493F-9F55-B96C470884EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,6 +107,10 @@ Global
 		{FF5EB1C0-8678-45D5-ABB8-006FB9A86D78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF5EB1C0-8678-45D5-ABB8-006FB9A86D78}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF5EB1C0-8678-45D5-ABB8-006FB9A86D78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A9FC04E-B299-493F-9F55-B96C470884EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A9FC04E-B299-493F-9F55-B96C470884EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A9FC04E-B299-493F-9F55-B96C470884EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A9FC04E-B299-493F-9F55-B96C470884EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -126,6 +132,7 @@ Global
 		{06D2AD19-FB0B-462E-B4F2-F5D626DBB7C6} = {9BFD84DD-2E38-4755-9011-D0C05D4F7546}
 		{DBBBF107-89A0-4E95-A334-650E234812F1} = {9BFD84DD-2E38-4755-9011-D0C05D4F7546}
 		{FF5EB1C0-8678-45D5-ABB8-006FB9A86D78} = {9BFD84DD-2E38-4755-9011-D0C05D4F7546}
+		{3A9FC04E-B299-493F-9F55-B96C470884EF} = {0E1F6D67-939B-4C00-AAF3-59E9D00D73C7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {460A108C-517A-4B1D-8470-71DF81DC9131}

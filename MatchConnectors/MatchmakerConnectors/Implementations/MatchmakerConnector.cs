@@ -42,7 +42,7 @@ namespace Connectors.MatchmakerConnectors
         internal async Task<HttpResponseMessage> PostAsync(string uri, string json) 
             => await _client.PostAsync(
                 uri, 
-                new StringContent(json, Encoding.ASCII, "application/json"), 
+                new StringContent(json, Encoding.UTF8, "application/json"), 
                 _cancellationToken);
 
         internal async Task<HttpResponseMessage> GetAsync(string uri) 

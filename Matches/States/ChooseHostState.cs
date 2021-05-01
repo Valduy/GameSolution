@@ -17,12 +17,24 @@ namespace Matches.States
         {
             if (MessageHelper.GetMessageType(received) == NetworkMessages.Hello)
             {
+                Context.LogInformation("Выбор хоста...");
+
                 if (TryGetClient(ip, out var client))
                 {
                     Context.ChooseHost(client);
+                    Context.LogInformation($"Пользователь {ip} назначен хостом.");
                     Context.State = new ConnectClientsState(Context);
+                    Context.LogInformation("Начинается соединение...");
                     await Context.SendMessageAsync(MessageHelper.GetMessage(NetworkMessages.Hello), ip);
                 }
+                else
+                {
+                    Context.LogInformation($"Неожиданный ip:{ip}.");
+                }
+            }
+            else
+            {
+                Context.LogInformation("Пришло неизвестное сообщение.");
             }
         }
 

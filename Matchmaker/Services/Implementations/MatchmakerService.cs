@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using GameLoops;
 using Matches;
 using Matchmaker.Factories;
+using Microsoft.Extensions.Logging;
 using Network;
 using Network.Messages;
 
@@ -23,14 +24,18 @@ namespace Matchmaker.Services
         private readonly Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
 
         private readonly IMatchFactory _matchFactory;
+        private readonly ILogger<MatchmakerService> _logger;
 
         private bool _disposed;
 
         public int PlayersPerMatch => 2;
 
-        public MatchmakerService(IMatchFactory matchFactory)
+        public MatchmakerService(
+            IMatchFactory matchFactory, 
+            ILogger<MatchmakerService> logger)
         {
             _matchFactory = matchFactory;
+            _logger = logger;
             _matchmakingLoop = new FixedFpsGameLoop(ManageMatchmaking, 60);
             _tokenSource = new CancellationTokenSource();
             _cancellationToken = _tokenSource.Token;
@@ -44,24 +49,31 @@ namespace Matchmaker.Services
 
         public bool Enqueue(string userId, ClientEndPoints endPoints)
         {
+            _logger.LogInformation($"Постановка в очередь (id пользователя: {userId}).");
+
             lock (_playersEndPoints)
             {
                 if (_playersEndPoints.ContainsKey(userId))
                 {
+                    _logger.LogInformation($"Пользователь уже в очереди (id пользователя: {userId}).");
                     return false;
                 }
 
                 _playersEndPoints[userId] = endPoints;
+                _logger.LogInformation($"Пользователь добавлен в очередь (id пользователя: {userId}).");
                 return true;
             }
         }
 
         public UserStatus GetStatus(string userId)
         {
+            _logger.LogInformation($"Запрос статуса (id пользователя: {userId}).");
+
             lock (_playersEndPoints)
             {
                 if (_playersEndPoints.ContainsKey(userId))
                 {
+                    _logger.LogInformation($"Пользователь ожидает (id пользователя: {userId}).");
                     return UserStatus.Wait;
                 }
             }
@@ -70,28 +82,36 @@ namespace Matchmaker.Services
             {
                 if (_playerToMatch.ContainsKey(userId))
                 {
+                    _logger.LogInformation($"Пользователь добавлен в матч (id пользователя: {userId}).");
                     return UserStatus.Connected;
                 }
             }
 
+            _logger.LogInformation($"Пользователь отсутствует (id пользователя: {userId}).");
             return UserStatus.Absent;
         }
 
         public int? GetMatch(string userId)
         {
+            _logger.LogInformation($"Запрос матча (id пользователя: {userId}).");
+
             lock (_playerToMatch)
             {
                 if (_playerToMatch.TryGetValue(userId, out var port))
                 {
+                    _logger.LogInformation($"Матч найден (id пользователя: {userId}).");
                     return port;
                 }
 
+                _logger.LogInformation($"Матч не найден (id пользователя: {userId}).");
                 return null;
             }
         }
 
         public bool Remove(string userId)
         {
+            _logger.LogInformation($"Выход из очереди (id пользователя: {userId}).");
+
             lock (_playersEndPoints)
             {
                 return _playersEndPoints.Remove(userId);
@@ -116,28 +136,23 @@ namespace Matchmaker.Services
 
         private void ManageMatchmaking(double dt)
         {
+            _logger.LogInformation("Попытка создать матч.");
+
             lock (_playersEndPoints)
             {
                 if (_playersEndPoints.Count < PlayersPerMatch) return;
 
-                try
+                _logger.LogInformation("Создаем матч.");
+                var playersPairs = _playersEndPoints.Take(PlayersPerMatch).ToList();
+                var playersEndPoints = playersPairs.Select(o => o.Value).ToList();
+                var matchPort = StartNewMatch(playersEndPoints);
+
+                lock (_playerToMatch)
                 {
-                    var playersPairs = _playersEndPoints.Take(PlayersPerMatch).ToList();
-                    var playersEndPoints = playersPairs.Select(o => o.Value).ToList();
-
-                    var matchPort = StartNewMatch(playersEndPoints);
-
-                    lock (_playerToMatch)
-                    {
-                        playersPairs.ForEach(o => _playerToMatch[o.Key] = matchPort);
-                    }
-
-                    playersPairs.ForEach(o => _playersEndPoints.Remove(o.Key));
+                    playersPairs.ForEach(o => _playerToMatch[o.Key] = matchPort);
                 }
-                catch (SocketException ex)
-                {
-                    // TODO: log
-                }
+
+                playersPairs.ForEach(o => _playersEndPoints.Remove(o.Key));
             }
         }
 
@@ -146,11 +161,14 @@ namespace Matchmaker.Services
             var match = _matchFactory.CreateMatch(playersEndPoints);
             match.MatchStarted += OnMatchStarted;
             Task.Run(async () => await match.WorkAsync(_cancellationToken), _cancellationToken);
+            _logger.LogInformation($"Матч запущен на порту {match.Port}.");
             return match.Port;
         }
 
         private void OnMatchStarted(IMatch match)
         {
+            _logger.LogInformation($"Матч стартовал (порт: {match.Port}).");
+
             lock (_playerToMatch)
             {
                 var matchPlayers = _playerToMatch

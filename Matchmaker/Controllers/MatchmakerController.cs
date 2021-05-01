@@ -2,6 +2,7 @@
 using Matchmaker.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Network;
 using Network.Messages;
 
@@ -11,11 +12,14 @@ namespace Matchmaker.Controllers
     public class MatchmakerController : Controller
     {
         private readonly IMatchmakerService _matchmakerService;
+        private readonly ILogger<MatchmakerController> _logger;
 
         public MatchmakerController(
-            IMatchmakerService matchmakerService)
+            IMatchmakerService matchmakerService,
+            ILogger<MatchmakerController> logger)
         {
             _matchmakerService = matchmakerService;
+            _logger = logger;
         }
 
         [Authorize]
@@ -23,6 +27,7 @@ namespace Matchmaker.Controllers
         public void Enqueue([FromBody]ClientEndPoint privateEndPoint)
         {
             var userId = User.GetName();
+            _logger.LogInformation($"Запрос на постановку в очередь (id пользователя: {userId}).");
             var publicIp = HttpContext.Connection.RemoteIpAddress;
             var publicEndPoint = new ClientEndPoint(publicIp.ToString(), 0);
             var endPoints = new ClientEndPoints(publicEndPoint, privateEndPoint);
@@ -34,6 +39,7 @@ namespace Matchmaker.Controllers
         public UserStatus GetStatus()
         {
             var userId = User.GetName();
+            _logger.LogInformation($"Запрос на получение статуса (id пользователя: {userId}).");
             return _matchmakerService.GetStatus(userId);
         }
 
@@ -42,6 +48,7 @@ namespace Matchmaker.Controllers
         public int? GetMatch()
         {
             var userId = User.GetName();
+            _logger.LogInformation($"Запрос на получение матча (id пользователя: {userId}).");
             return _matchmakerService.GetMatch(userId);
         }
 
@@ -50,6 +57,7 @@ namespace Matchmaker.Controllers
         public bool Remove()
         {
             var userId = User.GetName();
+            _logger.LogInformation($"Запрос на выход из очереди (id пользователя: {userId}).");
             return _matchmakerService.Remove(userId);
         }
     }

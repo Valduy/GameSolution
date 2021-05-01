@@ -21,8 +21,11 @@ namespace Matches.States
         {
             if (MessageHelper.GetMessageType(received) == NetworkMessages.Hello)
             {
+                Context.LogInformation("Пришло сообщение на подключение.");
+
                 if (IsClient(ip))
                 {
+                    Context.LogInformation($"Пользователь {ip} уже добавлен.");
                     await Context.SendMessageAsync(MessageHelper.GetMessage(NetworkMessages.Hello), ip);
                 }
                 else
@@ -34,18 +37,27 @@ namespace Matches.States
                         if (IsExpected(clientEndPoints))
                         {
                             Context.AddClient(clientEndPoints);
+                            Context.LogInformation($"Пользователь {ip} добавлен.");
                             TryChangeState();
                             await Context.SendMessageAsync(MessageHelper.GetMessage(NetworkMessages.Hello), ip);
+                        }
+                        else
+                        {
+                            Context.LogInformation($"Неожиданный ip:{ip}.");
                         }
                     }
                     catch (Exception ex)
                     {
                         if (ex is JsonException || ex is ArgumentException)
                         {
-                            return; // TODO: лог о неправильном JSON'е?
+                            Context.LogError("Некорректный JSON.");
                         }
                     }
                 }
+            }
+            else
+            {
+                Context.LogInformation("Пришло неизвестное сообщение.");
             }
         }
 
@@ -68,11 +80,10 @@ namespace Matches.States
 
         private void TryChangeState()
         {
-            if (Context.Clients.Count >= _playersCount)
-            {
-                Context.State = new ChooseHostState(Context);
-                Context.NotifyThatStarted();
-            }
+            if (Context.Clients.Count < _playersCount) return;
+            Context.State = new ChooseHostState(Context);
+            Context.LogInformation("Начинается выбор хоста...");
+            Context.NotifyThatStarted();
         }
     }
 }

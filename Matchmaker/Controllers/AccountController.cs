@@ -1,23 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Net;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
-using Context;
 using Matchmaker.Exceptions;
 using Matchmaker.Helpers;
 using Matchmaker.Services;
 using Matchmaker.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Models;
+using Network.Messages;
 
 namespace Matchmaker.Controllers
 {
@@ -26,13 +22,16 @@ namespace Matchmaker.Controllers
     {
         private readonly IAccountService _accountService;
         private readonly IMapper _mapper;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             IAccountService accountService,
-            IMapper mapper)
+            IMapper mapper,
+            ILogger<AccountController> logger)
         {
             _accountService = accountService;
             _mapper = mapper;
+            _logger = logger;
         }
 
         /// <summary>
@@ -47,7 +46,13 @@ namespace Matchmaker.Controllers
         [HttpPost("registration")]
         public async Task<IActionResult> Register([FromBody]UserViewModel model)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            _logger.LogInformation($"Пользователь пытается зарегестрироваться под логином: {model.Login}.");
+            
+            if (!ModelState.IsValid)
+            {
+                _logger.LogInformation($"Пользователь {model.Login} указал некорректный логи или пароль.");
+                return BadRequest(ModelState);
+            }
 
             try
             {
@@ -56,17 +61,25 @@ namespace Matchmaker.Controllers
             }
             catch(AddItemException ex)
             {
+                _logger.LogInformation($"Пользователь {model.Login} уже есть в базе.");
                 throw new HttpStatusException(HttpStatusCode.Conflict, ex.Message);
             }
 
+            _logger.LogInformation($"Пользователь {model.Login} был успешно зарегистрирован.");
             return Ok();
         }
 
         [HttpPost("authorisation")]
         public async Task<IActionResult> Authorize([FromBody] UserViewModel model)
         {
+            _logger.LogInformation($"Пользователь {model.Login} пытается авторизоваться.");
             var identity = await GetIdentity(model);
-            if (identity == null) return Unauthorized();
+            
+            if (identity == null)
+            {
+                _logger.LogInformation($"Пользователь {model.Login} не был найден.");
+                return Unauthorized();
+            }
 
             var now = DateTime.UtcNow;
             var jwt = new JwtSecurityToken(
@@ -78,12 +91,8 @@ namespace Matchmaker.Controllers
                 signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
 
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-            var response = new
-            {
-                access_token = encodedJwt,
-                id = identity.Name,
-            };
-
+            var response = new TokenMessage(encodedJwt, identity.Name);
+            _logger.LogInformation($"Пользователь {model.Login} был успешно авторизован.");
             return Ok(response);
         }
 
@@ -96,7 +105,11 @@ namespace Matchmaker.Controllers
             if (user != null)
             {
                 var claims = new List<Claim> {new Claim(ClaimsIdentity.DefaultNameClaimType, user.Id.ToString())};
-                identity = new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
+                identity = new ClaimsIdentity(
+                    claims, 
+                    "Token", 
+                    ClaimsIdentity.DefaultNameClaimType, 
+                    ClaimsIdentity.DefaultRoleClaimType);
             }
 
             return identity;

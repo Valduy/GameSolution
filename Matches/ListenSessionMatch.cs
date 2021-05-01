@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Matches.States;
+using Microsoft.Extensions.Logging;
 using Network;
 using Network.Messages;
 
@@ -14,6 +15,8 @@ namespace Matches
 {
     public class ListenSessionMatch : IMatch, IDisposable
     {
+        private readonly ILogger<ListenSessionMatch> _logger;
+
         private UdpClient _udpClient;
         private CancellationToken _cancellationToken;
         private List<ClientEndPoints> _clients;
@@ -33,23 +36,36 @@ namespace Matches
 
         public event Action<IMatch> MatchStarted;
 
-        public ListenSessionMatch(IEnumerable<ClientEndPoints> playersEndPoints) 
-            : this(playersEndPoints, 0)
+        public ListenSessionMatch(
+            IEnumerable<ClientEndPoints> playersEndPoints, 
+            ILogger<ListenSessionMatch> logger = null) 
+            : this(playersEndPoints, 0, logger)
         { }
 
-        public ListenSessionMatch(IEnumerable<ClientEndPoints> playersEndPoints, int port) 
-            : this(playersEndPoints, 30000, port)
+        public ListenSessionMatch(
+            IEnumerable<ClientEndPoints> playersEndPoints, 
+            int port, 
+            ILogger<ListenSessionMatch> logger = null) 
+            : this(playersEndPoints, 30000, port, logger)
         { }
 
-        public ListenSessionMatch(IEnumerable<ClientEndPoints> playersEndPoints, long timeForStarting) 
-            : this(playersEndPoints, timeForStarting, 0)
+        public ListenSessionMatch(
+            IEnumerable<ClientEndPoints> playersEndPoints, 
+            long timeForStarting, 
+            ILogger<ListenSessionMatch> logger = null) 
+            : this(playersEndPoints, timeForStarting, 0, logger)
         { }
 
-        public ListenSessionMatch(IEnumerable<ClientEndPoints> playersEndPoints, long timeForStarting, int port)
+        public ListenSessionMatch(
+            IEnumerable<ClientEndPoints> playersEndPoints, 
+            long timeForStarting, 
+            int port, 
+            ILogger<ListenSessionMatch> logger = null)
         {
+            _logger = logger;
             ExpectedPlayers = playersEndPoints;
             TimeForStarting = timeForStarting;
-            _udpClient = new UdpClient(Port);
+            _udpClient = new UdpClient(port);
             Port = _udpClient.GetPort();
         }
 
@@ -61,8 +77,13 @@ namespace Matches
             _timer = new Stopwatch();
             _timer.Start();
             State = new WaitClientState(this);
-
             await ConnectionLoopAsync();
+        }
+
+        public void Dispose()
+        {
+            _udpClient.Close();
+            _udpClient.Dispose();
         }
 
         internal void AddClient(ClientEndPoints client) => _clients.Add(client);
@@ -80,8 +101,16 @@ namespace Matches
         internal async Task SendMessageAsync(byte[] message, IPEndPoint ip)
             => await _udpClient.SendAsync(message, message.Length, ip);
 
+        internal void LogInformation(string message) 
+            => _logger?.LogInformation($"Матч (порт: {Port}): {message}");
+        internal void LogError(string message) 
+            => _logger?.LogError($"Матч (порт: {Port}): {message}");
+
         private async Task ConnectionLoopAsync()
         {
+            LogInformation("Матч стартовал.");
+            LogInformation("Ожидание игроков.");
+
             while (_timer.ElapsedMilliseconds < TimeForStarting)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
@@ -96,14 +125,9 @@ namespace Matches
             if (_udpClient.Available > 0)
             {
                 var received = await _udpClient.ReceiveAsync();
+                LogInformation($"Получено сообщение от {received.RemoteEndPoint}.");
                 await State.ProcessMessageAsync(received.RemoteEndPoint, received.Buffer);
             }
-        }
-
-        public void Dispose()
-        {
-            _udpClient.Close();
-            _udpClient.Dispose();
         }
     }
 }

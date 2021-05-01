@@ -24,7 +24,7 @@ namespace Connectors.MatchmakerConnectors
 
         private async Task<int?> GetMatchPort()
         {
-            var response = await Context.GetAsync($"{Context.Host}/api/match");
+            var response = await Context.GetAsync($"{Context.Host}/api/matchmaker/match");
 
             if (!response.IsSuccessStatusCode)
             {
