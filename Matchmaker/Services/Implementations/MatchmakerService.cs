@@ -14,10 +14,28 @@ namespace Matchmaker.Services
     // TODO: чистка давно не дававших о себе знать пользователей
     public class MatchmakerService : IMatchmakerService, IDisposable
     {
-        private const int MatchCreationDelay = 1000 / 60;
+        private class ClientRecord
+        {
+            public ClientEndPoints EndPoints { get; }
+            public int LastRequestTime { get; set; }
+
+            public ClientRecord(ClientEndPoints endPoints) 
+                : this(endPoints, DateTime.Now.Millisecond)
+            { }
+
+            public ClientRecord(ClientEndPoints endPoints, int lastRequestTime)
+            {
+                EndPoints = endPoints;
+                LastRequestTime = lastRequestTime;
+            }
+        }
+
+        private const int MatchmakerDelay = 1000 / 60;
+        private const int CleaningDelay = 5000;
+        private const int AllowedDelta = CleaningDelay;
 
         private readonly CancellationTokenSource _tokenSource;
-        private readonly Dictionary<string, ClientEndPoints> _playersEndPoints = new Dictionary<string, ClientEndPoints>();
+        private readonly Dictionary<string, ClientRecord> _playersRecords = new Dictionary<string, ClientRecord>();
         private readonly Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
 
         private readonly IMatchFactory _matchFactory;
@@ -34,7 +52,14 @@ namespace Matchmaker.Services
             _matchFactory = matchFactory;
             _logger = logger;
             _tokenSource = new CancellationTokenSource();
-            Task.Run(() => MatchmakingLoop(_tokenSource.Token), _tokenSource.Token);
+
+            Task.Run(
+                () => DelayedLoop(MatchmakingFrame, MatchmakerDelay, _tokenSource.Token), 
+                _tokenSource.Token);
+
+            Task.Run(
+                () => DelayedLoop(CleaningFrame, CleaningDelay, _tokenSource.Token),
+                _tokenSource.Token);
         }
 
         public void Dispose()
@@ -52,15 +77,15 @@ namespace Matchmaker.Services
         {
             _logger.LogInformation($"Постановка в очередь (id пользователя: {userId}).");
 
-            lock (_playersEndPoints)
+            lock (_playersRecords)
             {
-                if (_playersEndPoints.ContainsKey(userId))
+                if (_playersRecords.ContainsKey(userId))
                 {
                     _logger.LogInformation($"Пользователь уже в очереди (id пользователя: {userId}).");
                     return false;
                 }
 
-                _playersEndPoints[userId] = endPoints;
+                _playersRecords[userId] = new ClientRecord(endPoints);
                 _logger.LogInformation($"Пользователь добавлен в очередь (id пользователя: {userId}).");
                 return true;
             }
@@ -70,11 +95,12 @@ namespace Matchmaker.Services
         {
             _logger.LogInformation($"Запрос статуса (id пользователя: {userId}).");
 
-            lock (_playersEndPoints)
+            lock (_playersRecords)
             {
-                if (_playersEndPoints.ContainsKey(userId))
+                if (_playersRecords.TryGetValue(userId, out var record))
                 {
                     _logger.LogInformation($"Пользователь ожидает (id пользователя: {userId}).");
+                    record.LastRequestTime = DateTime.Now.Millisecond;
                     return UserStatus.Wait;
                 }
             }
@@ -113,9 +139,9 @@ namespace Matchmaker.Services
         {
             _logger.LogInformation($"Выход из очереди (id пользователя: {userId}).");
 
-            lock (_playersEndPoints)
+            lock (_playersRecords)
             {
-                return _playersEndPoints.Remove(userId);
+                return _playersRecords.Remove(userId);
             }
         }
         
@@ -128,25 +154,25 @@ namespace Matchmaker.Services
             _disposed = true;
         }
 
-        private async Task MatchmakingLoop(CancellationToken token)
+        private async Task DelayedLoop(Action action, int delay, CancellationToken cancellationToken)
         {
             while (true)
             {
-                token.ThrowIfCancellationRequested();
-                MatchmakingFrame(token);
-                await Task.Delay(MatchCreationDelay, token);
+                cancellationToken.ThrowIfCancellationRequested();
+                action();
+                await Task.Delay(delay, cancellationToken);
             }
         }
 
-        private void MatchmakingFrame(CancellationToken token)
+        private void MatchmakingFrame()
         {
-            lock (_playersEndPoints)
+            lock (_playersRecords)
             {
-                if (_playersEndPoints.Count < PlayersPerMatch) return;
+                if (_playersRecords.Count < PlayersPerMatch) return;
 
                 _logger.LogInformation("Создаем матч.");
-                var playersPairs = _playersEndPoints.Take(PlayersPerMatch).ToList();
-                var playersEndPoints = playersPairs.Select(o => o.Value).ToList();
+                var playersPairs = _playersRecords.Take(PlayersPerMatch).ToList();
+                var playersEndPoints = playersPairs.Select(o => o.Value.EndPoints).ToList();
                 var matchPort = StartNewMatch(playersEndPoints);
 
                 lock (_playerToMatch)
@@ -154,7 +180,7 @@ namespace Matchmaker.Services
                     playersPairs.ForEach(o => _playerToMatch[o.Key] = matchPort);
                 }
 
-                playersPairs.ForEach(o => _playersEndPoints.Remove(o.Key));
+                playersPairs.ForEach(o => _playersRecords.Remove(o.Key));
             }
         }
 
@@ -181,6 +207,18 @@ namespace Matchmaker.Services
                 {
                     _playerToMatch.Remove(player);
                 }
+            }
+        }
+
+        private void CleaningFrame()
+        {
+            lock (_playersRecords)
+            {
+                int currentTime = DateTime.Now.Millisecond;
+                _playersRecords
+                    .Where(record => currentTime - record.Value.LastRequestTime > AllowedDelta)
+                    .ToList()
+                    .ForEach(pair => _playersRecords.Remove(pair.Key));
             }
         }
     }
