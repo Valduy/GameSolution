@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using GameLoops;
 using Matches;
 using Matchmaker.Factories;
 using Microsoft.Extensions.Logging;
@@ -16,10 +14,9 @@ namespace Matchmaker.Services
     // TODO: чистка давно не дававших о себе знать пользователей
     public class MatchmakerService : IMatchmakerService, IDisposable
     {
-        private readonly FixedFpsGameLoop _matchmakingLoop;
-        private readonly CancellationTokenSource _tokenSource;
-        private readonly CancellationToken _cancellationToken;
+        private const int MatchCreationDelay = 1000 / 60;
 
+        private readonly CancellationTokenSource _tokenSource;
         private readonly Dictionary<string, ClientEndPoints> _playersEndPoints = new Dictionary<string, ClientEndPoints>();
         private readonly Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
 
@@ -36,10 +33,14 @@ namespace Matchmaker.Services
         {
             _matchFactory = matchFactory;
             _logger = logger;
-            _matchmakingLoop = new FixedFpsGameLoop(ManageMatchmaking, 60);
             _tokenSource = new CancellationTokenSource();
-            _cancellationToken = _tokenSource.Token;
-            _matchmakingLoop.Start();
+            Task.Run(() => MatchmakingLoop(_tokenSource.Token), _tokenSource.Token);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         ~MatchmakerService()
@@ -117,27 +118,28 @@ namespace Matchmaker.Services
                 return _playersEndPoints.Remove(userId);
             }
         }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
+        
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
             if (disposing) { }
 
-            _matchmakingLoop.Stop();
             _tokenSource.Cancel();
             _disposed = true;
         }
 
-        private void ManageMatchmaking(double dt)
+        private async Task MatchmakingLoop(CancellationToken token)
         {
-            _logger.LogInformation("Попытка создать матч.");
+            while (true)
+            {
+                token.ThrowIfCancellationRequested();
+                MatchmakingFrame(token);
+                await Task.Delay(MatchCreationDelay, token);
+            }
+        }
 
+        private void MatchmakingFrame(CancellationToken token)
+        {
             lock (_playersEndPoints)
             {
                 if (_playersEndPoints.Count < PlayersPerMatch) return;
@@ -160,7 +162,7 @@ namespace Matchmaker.Services
         {
             var match = _matchFactory.CreateMatch(playersEndPoints);
             match.MatchStarted += OnMatchStarted;
-            Task.Run(async () => await match.WorkAsync(_cancellationToken), _cancellationToken);
+            Task.Run(async () => await match.WorkAsync(_tokenSource.Token), _tokenSource.Token);
             _logger.LogInformation($"Матч запущен на порту {match.Port}.");
             return match.Port;
         }

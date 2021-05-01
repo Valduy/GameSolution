@@ -19,7 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DBRepository\Context.csproj" />
-    <ProjectReference Include="..\GameLoop\GameLoops.csproj" />
     <ProjectReference Include="..\Matches\Matches.csproj" />
     <ProjectReference Include="..\Network\Network.csproj" />
   </ItemGroup>

@@ -1,6 +1,8 @@
 using System;
 using AutoMapper;
 using Context;
+using Matchmaker.Factories;
+using Matchmaker.Factories.Implementations;
 using Matchmaker.Helpers;
 using Matchmaker.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -57,7 +59,8 @@ namespace Matchmaker
             services.AddDbContext<GameDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped<IAccountService, AccountService>();
-            services.AddSingleton<IMatchmakerService, FakeMatchmakerService>();
+            services.AddSingleton<IMatchFactory, ListenMatchFactory>();
+            services.AddSingleton<IMatchmakerService, MatchmakerService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

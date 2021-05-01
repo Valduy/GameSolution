@@ -24,6 +24,8 @@ namespace FakeMatchmakerConnection
             var connectionTask1 = Task.Run(async ()
                 => await connector1.ConnectAsync(endPoint1, "http://localhost:5000", token1.accessToken));
 
+            Console.WriteLine("Первый пользователь готов");
+
             var connector2 = new MatchmakerConnector();
             var httpClient2 = new HttpClient();
             var json2 = JsonSerializer.Serialize(new {Login = "Nosnavi", Password = "12345678"});
@@ -34,6 +36,10 @@ namespace FakeMatchmakerConnection
             var endPoint2 = new ClientEndPoint(NetworkHelper.GetLocalIPAddress(), 4322);
             var connectionTask2 = Task.Run(async () 
                 => await connector2.ConnectAsync(endPoint2, "http://localhost:5000", token2.accessToken));
+
+            Console.WriteLine("Второй пользователь готов");
+
+            Console.WriteLine("Ждем...");
 
             var port1 = await connectionTask1;
             var port2 = await connectionTask2;

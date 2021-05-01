@@ -8,6 +8,8 @@ using Network;
 using Network.Messages;
 using System.Text.Json;
 using Matchmaker.Factories.Implementations;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Orderers.Attributes;
 using Xunit;
 
@@ -28,7 +30,14 @@ namespace Matchmaker.Tests.Integration
 
         public MatchmakerServiceFixture()
         {
-            Matchmaker = new MatchmakerService(new ListenMatchFactory());
+            var serviceProvider = new ServiceCollection()
+                .AddLogging()
+                .BuildServiceProvider();
+
+            var factory = serviceProvider.GetService<ILoggerFactory>();
+            var logger = factory.CreateLogger<MatchmakerService>();
+
+            Matchmaker = new MatchmakerService(new ListenMatchFactory(null), logger);
             UdpClient1 = new UdpClient(0);
             UdpClient2 = new UdpClient(0);
             Port1 = UdpClient1.GetPort();
