@@ -21,16 +21,10 @@ namespace Connectors.MatchConnectors
 
         public override void ProcessMessage(byte[] message)
         {
-            if (IsExpectedMessageType(message))
+            if (MessageHelper.GetMessageType(message) == NetworkMessages.Initial)
             {
                 Context.State = new WaitMatchState(Context);
             }
-        }
-
-        private bool IsExpectedMessageType(byte[] message)
-        {
-            var messageType = MessageHelper.GetMessageType(message);
-            return messageType == NetworkMessages.Hello || messageType == NetworkMessages.Initial;
         }
     }
 }

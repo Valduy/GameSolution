@@ -11,13 +11,13 @@ namespace Connectors.MatchConnectors
     {
         private const int LoopDelay = 100;
         private const int ReceiveTimeout = 100;
-        private const int MaxAttempts = 10;
 
         private bool _isRun;
         private int _currentAttempts;
         private UdpClient _udpClient;
         private CancellationToken _cancellationToken;
 
+        public int MaxAttempts { get; set; } = 10;
         public string ServerIp { get; private set; }
         public int ServerPort { get; private set; }
         internal string Ip { get; private set; }
@@ -63,7 +63,7 @@ namespace Connectors.MatchConnectors
         {
             await State.SendMessageAsync();
 
-            while (_udpClient.Available > 0)
+            while (_isRun && _udpClient.Available > 0)
             {
                 if (TryReceive(out var message))
                 {

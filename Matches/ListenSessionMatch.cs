@@ -16,8 +16,8 @@ namespace Matches
     public class ListenSessionMatch : IMatch, IDisposable
     {
         private readonly ILogger<ListenSessionMatch> _logger;
+        private readonly UdpClient _udpClient;
 
-        private UdpClient _udpClient;
         private CancellationToken _cancellationToken;
         private List<ClientEndPoints> _clients;
         private ClientEndPoints _host;
@@ -122,7 +122,7 @@ namespace Matches
 
         private async Task ConnectionFrameAsync()
         {
-            if (_udpClient.Available > 0)
+            while (_udpClient.Available > 0)
             {
                 var received = await _udpClient.ReceiveAsync();
                 LogInformation($"Получено сообщение от {received.RemoteEndPoint}.");

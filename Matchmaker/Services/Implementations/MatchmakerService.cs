@@ -168,19 +168,20 @@ namespace Matchmaker.Services
         {
             lock (_playersRecords)
             {
-                if (_playersRecords.Count < PlayersPerMatch) return;
-
-                _logger.LogInformation("Создаем матч.");
-                var playersPairs = _playersRecords.Take(PlayersPerMatch).ToList();
-                var playersEndPoints = playersPairs.Select(o => o.Value.EndPoints).ToList();
-                var matchPort = StartNewMatch(playersEndPoints);
-
-                lock (_playerToMatch)
+                while (_playersRecords.Count >= PlayersPerMatch)
                 {
-                    playersPairs.ForEach(o => _playerToMatch[o.Key] = matchPort);
-                }
+                    _logger.LogInformation("Создаем матч.");
+                    var playersPairs = _playersRecords.Take(PlayersPerMatch).ToList();
+                    var playersEndPoints = playersPairs.Select(o => o.Value.EndPoints).ToList();
+                    var matchPort = StartNewMatch(playersEndPoints);
 
-                playersPairs.ForEach(o => _playersRecords.Remove(o.Key));
+                    lock (_playerToMatch)
+                    {
+                        playersPairs.ForEach(o => _playerToMatch[o.Key] = matchPort);
+                    }
+
+                    playersPairs.ForEach(o => _playersRecords.Remove(o.Key));
+                }
             }
         }
 
