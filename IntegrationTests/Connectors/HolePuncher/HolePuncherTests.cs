@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -9,14 +9,17 @@ using Network;
 using Network.Messages;
 using Xunit;
 
-namespace Connectors.Tests.Integration
+namespace IntegrationTests.Connectors.HolePuncher
 {
-    public class MatchConnectorTests
+    public class HolePuncherTests
     {
         [Fact]
         public async Task ConnectAsyncTest()
         {
             // Arrange
+            var holePuncher1 = new global::Connectors.HolePuncher.HolePuncher();
+            var holePuncher2 = new global::Connectors.HolePuncher.HolePuncher();
+
             var udpClient1 = new UdpClient(0);
             var udpClient2 = new UdpClient(0);
 
@@ -31,15 +34,13 @@ namespace Connectors.Tests.Integration
             var connector1 = new MatchConnector();
             var connector2 = new MatchConnector();
 
-            var match = new ListenSessionMatch(new []{endPoints1, endPoints2});
-
-            // Act
+            var match = new ListenSessionMatch(new[] { endPoints1, endPoints2 });
             var tokenSource = new CancellationTokenSource();
             _ = Task.Run(async () => await match.WorkAsync(tokenSource.Token), tokenSource.Token);
 
             var connectorTask1 = Task.Run(
                 async () => await connector1.ConnectAsync(
-                    udpClient1, 
+                    udpClient1,
                     IPAddress.Loopback.ToString(),
                     match.Port));
 
@@ -53,9 +54,18 @@ namespace Connectors.Tests.Integration
             var connectionMessage2 = await connectorTask2;
             tokenSource.Cancel();
 
+            // Act
+            var holePunchingTask1 = Task.Run(
+                async () => await holePuncher1.ConnectAsync(udpClient1, connectionMessage1.Clients));
+            var holePunchingTask2 = Task.Run(
+                async () => await holePuncher2.ConnectAsync(udpClient2, connectionMessage2.Clients));
+
+            var clients1 = await holePunchingTask1;
+            var clients2 = await holePunchingTask2;
+
             // Assert
-            Assert.True(connectionMessage1.Clients.First().PrivateEndPoint.IsSame(privateEndPoint2));
-            Assert.True(connectionMessage2.Clients.First().PrivateEndPoint.IsSame(privateEndPoint1));
+            Assert.Equal(clients1.First().Port, udpClient2.GetPort());
+            Assert.Equal(clients2.First().Port, udpClient1.GetPort());
         }
     }
 }

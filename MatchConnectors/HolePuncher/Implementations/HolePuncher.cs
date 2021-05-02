@@ -16,7 +16,7 @@ namespace Connectors.HolePuncher
         Confirm,
     }
 
-    class HolePuncher : IHolePuncher
+    public class HolePuncher : IHolePuncher
     {
         private const int LoopDelay = 1000;
 
@@ -91,6 +91,8 @@ namespace Connectors.HolePuncher
 
         private void ProcessMessage(byte[] message, IPEndPoint endPoint)
         {
+            var t = MessageHelper.ToByteArray(message);
+
             if (MessageHelper.GetMessageType(message) == NetworkMessages.Connect)
             {
                 switch (ToConnectionAction(message))
@@ -123,10 +125,10 @@ namespace Connectors.HolePuncher
         }
 
         private async Task SendMessage(byte[] message, ClientEndPoint endPoint) 
-            => await _udpClient.SendAsync(CheckMessage, CheckMessage.Length, endPoint.Ip, endPoint.Port);
+            => await _udpClient.SendAsync(message, message.Length, endPoint.Ip, endPoint.Port);
 
         private async Task SendMessage(byte[] message, IPEndPoint endPoint)
-            => await _udpClient.SendAsync(CheckMessage, CheckMessage.Length, endPoint);
+            => await _udpClient.SendAsync(message, message.Length, endPoint);
 
         private bool IsLoopback(string ip) 
             => IPAddress.IsLoopback(IPAddress.Parse(ip));

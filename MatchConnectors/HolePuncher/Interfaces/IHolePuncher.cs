@@ -7,7 +7,7 @@ using Network.Messages;
 
 namespace Connectors.HolePuncher
 {
-    interface IHolePuncher
+    public interface IHolePuncher
     {
         Task<List<IPEndPoint>> ConnectAsync(
             UdpClient udpClient,
