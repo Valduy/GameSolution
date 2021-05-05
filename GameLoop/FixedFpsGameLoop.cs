@@ -58,6 +58,7 @@ namespace GameLoops
         public void Stop()
         {
             _tokenSource?.Cancel();
+            _tokenSource?.Dispose();
             _tokenSource = null;
         }
     }

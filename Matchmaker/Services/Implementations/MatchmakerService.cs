@@ -151,6 +151,7 @@ namespace Matchmaker.Services
             if (disposing) { }
 
             _tokenSource.Cancel();
+            _tokenSource.Dispose();
             _disposed = true;
         }
 
