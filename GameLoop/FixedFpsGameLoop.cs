@@ -10,7 +10,6 @@ namespace GameLoops
         private readonly Action<double> _gameFrame;
 
         private CancellationTokenSource _tokenSource;
-        private CancellationToken _token;
 
         public long Dt { get; }
         public double Frame { get; }
