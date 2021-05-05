@@ -68,11 +68,6 @@ namespace Matchmaker.Services
             GC.SuppressFinalize(this);
         }
 
-        ~MatchmakerService()
-        {
-            Dispose(false);
-        }
-
         public bool Enqueue(string userId, ClientEndPoints endPoints)
         {
             _logger.LogInformation($"Постановка в очередь (id пользователя: {userId}).");
@@ -148,11 +143,13 @@ namespace Matchmaker.Services
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
-            if (disposing) { }
 
-            _tokenSource.Cancel();
-            _tokenSource.Dispose();
-            _disposed = true;
+            if (disposing)
+            {
+                _tokenSource.Cancel();
+                _tokenSource.Dispose();
+                _disposed = true;
+            }
         }
 
         private async Task DelayedLoop(Action action, int delay, CancellationToken cancellationToken)

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace GameLoops
 {
-    public class FixedFpsGameLoop
+    public class FixedFpsGameLoop : IDisposable
     {
         private readonly Action<double> _gameFrame;
 
@@ -25,15 +25,15 @@ namespace GameLoops
         public void Start()
         {
             _tokenSource = new CancellationTokenSource();
-            _token = _tokenSource.Token;
 
             Task.Run(() =>
             {
                 var timer = new Stopwatch();
                 timer.Start();
 
-                while (!_token.IsCancellationRequested)
+                while (true)
                 {
+                    _tokenSource.Token.ThrowIfCancellationRequested();
                     var accumulator = timer.ElapsedMilliseconds;
 
                     if (accumulator >= Dt)
@@ -52,7 +52,7 @@ namespace GameLoops
                         _gameFrame(Frame);
                     }
                 }
-            }, _token);
+            }, _tokenSource.Token);
         }
 
         public void Stop()
@@ -61,5 +61,7 @@ namespace GameLoops
             _tokenSource?.Dispose();
             _tokenSource = null;
         }
+
+        public void Dispose() => Stop();
     }
 }
