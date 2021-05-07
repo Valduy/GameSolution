@@ -1,6 +1,6 @@
-﻿namespace Network
+﻿namespace Network.NetworkBuffers
 {
-    public class ConcurrentNetworkBuffer : INetworkBuffer, IReadOnlyNetworkBuffer
+    public class ConcurrentNetworkBuffer : INetworkBuffer, IReadOnlyNetworkBuffer, IWriteOnlyNetworkBuffer
     {
         private readonly byte[][] _messages;
 

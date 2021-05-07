@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Network;
+using Network.NetworkBuffers;
 using Xunit;
 
 namespace UnitTests.Network

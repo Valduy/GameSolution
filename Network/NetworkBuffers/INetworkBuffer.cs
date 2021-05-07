@@ -1,4 +1,4 @@
-﻿namespace Network
+﻿namespace Network.NetworkBuffers
 {
     public interface INetworkBuffer
     {
