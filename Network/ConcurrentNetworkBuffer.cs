@@ -4,6 +4,7 @@
     {
         private readonly byte[][] _messages;
 
+        private bool _isFull;
         private int _start;
         private int _end;
 
@@ -18,7 +19,16 @@
             }
         }
 
-        public bool IsFull { get; private set; }
+        public bool IsFull
+        {
+            get
+            {
+                lock (_messages)
+                {
+                    return _isFull;
+                }
+            }
+        }
 
         public int Size { get; }
 
@@ -49,7 +59,7 @@
             {
                 _messages[_end] = message;
 
-                if (IsFull)
+                if (_isFull)
                 {
                     Move(ref _start);
                     Move(ref _end);
@@ -57,7 +67,7 @@
                 else
                 {
                     Move(ref _end);
-                    IsFull = _start == _end;
+                    _isFull = _start == _end;
                 }
             }
         }
@@ -67,7 +77,7 @@
             lock (_messages)
             {
                 if (IsEmpty) return null;
-                IsFull = false;
+                _isFull = false;
                 var start = _start;
                 Move(ref _start);
                 return _messages[start];
@@ -79,7 +89,7 @@
             lock (_messages)
             {
                 if (IsEmpty) return null;
-                IsFull = false;
+                _isFull = false;
                 _start = _end;
                 return _messages[PrevValue(_end)];
             }
