@@ -13,6 +13,7 @@ namespace GameLoops
 
         public long Dt { get; }
         public double Frame { get; }
+        public bool IsRun { get; private set; }
 
         public FixedFpsGameLoop(Action<double> gameFrame, uint fps)
         {
@@ -23,7 +24,13 @@ namespace GameLoops
 
         public void Start()
         {
+            if (IsRun)
+            {
+                throw new GameLoopException("Цикл уже запущен.");
+            }
+
             _tokenSource = new CancellationTokenSource();
+            IsRun = true;
 
             Task.Run(() =>
             {
@@ -59,6 +66,7 @@ namespace GameLoops
             _tokenSource?.Cancel();
             _tokenSource?.Dispose();
             _tokenSource = null;
+            IsRun = false;
         }
 
         public void Dispose() => Stop();
