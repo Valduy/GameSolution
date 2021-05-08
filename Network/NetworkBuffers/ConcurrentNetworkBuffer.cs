@@ -38,11 +38,10 @@
             {
                 lock (_messages)
                 {
-                    if (IsFull) return Size;
                     if (IsEmpty) return 0;
                     return _start < _end
                         ? _end - _start
-                        : Size - _start + _end + 1;
+                        : Size - _start + _end;
                 }
             }
         }

@@ -288,6 +288,37 @@ namespace UnitTests.Network
                 },
                 4
             };
+
+            yield return new object[]
+            {
+                new[]
+                {
+                    new []
+                    {
+                        new byte[]{1, 2, 3, 4},
+                        new byte[]{5, 6},
+                        new byte[]{7, 8, 9},
+                    },
+                    new []
+                    {
+                        new byte[]{1, 2, 3, 4},
+                    },
+                },
+                new[]
+                {
+                    new []
+                    {
+                        new byte[]{1, 2, 3, 4},
+                        new byte[]{5, 6},
+                        new byte[]{7, 8, 9},
+                    },
+                    new []
+                    {
+                        new byte[]{1, 2, 3, 4},
+                    },
+                },
+                4
+            };
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

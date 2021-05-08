@@ -1,6 +1,6 @@
 ﻿namespace Network.NetworkBuffers
 {
-    interface IWriteOnlyNetworkBuffer
+    public interface IWriteOnlyNetworkBuffer
     {
         bool IsEmpty { get; }
         bool IsFull { get; }
