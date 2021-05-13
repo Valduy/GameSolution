@@ -91,8 +91,6 @@ namespace Connectors.HolePuncher
 
         private void ProcessMessage(byte[] message, IPEndPoint endPoint)
         {
-            var t = MessageHelper.ToByteArray(message);
-
             if (MessageHelper.GetMessageType(message) == NetworkMessages.Connect)
             {
                 switch (ToConnectionAction(message))
