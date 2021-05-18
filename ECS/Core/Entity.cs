@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace ECS.Core
@@ -8,7 +9,7 @@ namespace ECS.Core
     /// <summary>
     /// Класс, описывающий сущность.
     /// </summary>
-    public class Entity
+    public class Entity : IEnumerable<KeyValuePair<Type, ComponentBase>>
     {
         #region Поля.
         private readonly Dictionary<Type, ComponentBase> _components = new Dictionary<Type, ComponentBase>();
@@ -20,6 +21,10 @@ namespace ECS.Core
         #endregion.
 
         #region Методы.
+        public IEnumerator<KeyValuePair<Type, ComponentBase>> GetEnumerator() => _components.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
         /// <summary>
         /// Метод добавляет компонент в сущность.
         /// Если сущность уже имеет данный компонент, то новый компонент не добавляется.

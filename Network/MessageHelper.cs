@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
-//using System.Text.Json;
 
 namespace Network
 {
     public static class MessageHelper
     {
-        public static readonly int HeaderSize = sizeof(int);
+        public const int HeaderSize = sizeof(int);
 
         public static NetworkMessages GetMessageType(byte[] message)
             => (NetworkMessages)BitConverter.ToUInt32(message, 0);
