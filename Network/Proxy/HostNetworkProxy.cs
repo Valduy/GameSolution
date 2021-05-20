@@ -57,6 +57,8 @@ namespace Network.Proxy
 
         public IReadOnlyNetworkBuffer GetReadBuffer(IPEndPoint endPoint) => _readBuffers[endPoint];
 
+        public IWriteOnlyNetworkBuffer GetWriteBuffer(IPEndPoint endPoint) => _writeBuffers[endPoint];
+
         private async Task SendLoopAsync()
         {
             while (true)

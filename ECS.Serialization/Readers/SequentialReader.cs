@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace ECS.Serialization.Readers
@@ -29,9 +30,9 @@ namespace ECS.Serialization.Readers
 
         public ulong ReadUInt64() => ulong.Parse(ReadString());
 
-        public float ReadFloat() => float.Parse(ReadString());
+        public float ReadFloat() => float.Parse(ReadString(), CultureInfo.InvariantCulture);
 
-        public double ReadDouble() => double.Parse(ReadString());
+        public double ReadDouble() => double.Parse(ReadString(), CultureInfo.InvariantCulture);
 
         public string ReadString()
         {
