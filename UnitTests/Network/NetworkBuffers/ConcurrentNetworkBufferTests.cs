@@ -4,7 +4,7 @@ using System.Linq;
 using Network.NetworkBuffers;
 using Xunit;
 
-namespace UnitTests.Network
+namespace UnitTests.Network.NetworkBuffers
 {
     public class ConcurrentNetworkBufferTests
     {
