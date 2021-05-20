@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ECS.Core;
+using ECS.Serialization.Contexts;
 using ECS.Serialization.Readers;
 using ECS.Serialization.Writers;
 
@@ -9,25 +10,21 @@ namespace ECS.Serialization
 {
     public class EntitySerializer
     {
-        public void Serialize(WorldSerializer worldSerializer, Entity entity, ISequentialWriter writer)
+        private ComponentSerializer _componentSerializer = new ComponentSerializer();
+
+        public void Serialize(IEcsContext context, Entity entity, ISequentialWriter writer)
         {
-            var registeredTypeComponentPairs = GetRegisteredTypeComponentsPairs(worldSerializer, entity);
+            var registeredTypeComponentPairs = GetRegisteredTypeComponentsPairs(context, entity);
             // Пишем число компонентов.
             writer.WriteInt32(registeredTypeComponentPairs.Count);
 
             foreach (var typeComponentPair in registeredTypeComponentPairs)
             {
-                // Пишем id компонента.
-                writer.WriteInt32(worldSerializer.TypeToId[typeComponentPair.Key]);
-
-                if (worldSerializer.Converters.TryGetValue(typeComponentPair.Key, out var converter))
-                {
-                    converter.ToTokensSequence(typeComponentPair.Value, writer);
-                }
+                _componentSerializer.Serialize(context, typeComponentPair.Key, typeComponentPair.Value, writer);
             }
         }
 
-        public Entity Deserialize(WorldSerializer worldSerializer, ISequentialReader reader)
+        public Entity Deserialize(IEcsContext context, ISequentialReader reader)
         {
             var result = new Entity();
             // Читаем число компонентов.
@@ -35,20 +32,7 @@ namespace ECS.Serialization
 
             for (int i = 0; i < componentsCount; i++)
             {
-                // Читаем id компонентов.
-                int id = reader.ReadInt32();
-                var componentType = worldSerializer.IdToType[id];
-                ComponentBase component = null;
-
-                if (worldSerializer.Converters.TryGetValue(componentType, out var converter))
-                {
-                    component = converter.FromTokenSequence(reader);
-                }
-                else
-                {
-                    component = Activator.CreateInstance(componentType) as ComponentBase;
-                }
-               
+                var component = _componentSerializer.Deserialize(context, reader);
                 result.Add(component);
             }
 
@@ -56,10 +40,10 @@ namespace ECS.Serialization
         }
 
         private List<KeyValuePair<Type, ComponentBase>> GetRegisteredTypeComponentsPairs(
-            WorldSerializer worldSerializer,
+            IEcsContext context,
             Entity entity) 
             => entity
-                .Where(p => worldSerializer.Registered.Contains(p.Key))
+                .Where(p => context.Registered.Contains(p.Key))
                 .ToList();
     }
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using ECS.Core;
 using ECS.Serialization;
 using ECS.Serialization.Attributes;
+using ECS.Serialization.Contexts;
 using ECS.Serialization.Converters;
 using ECS.Serialization.Readers;
 using ECS.Serialization.Writers;
@@ -93,14 +94,16 @@ namespace UnitTests.ECS.Serialization
 
     public class WorldSerializerFixture
     {
+        public IEcsContext Context;
         public WorldSerializer WorldSerializer { get; }
 
         public WorldSerializerFixture()
         {
             WorldSerializer = new WorldSerializer();
-            WorldSerializer.Register<TestComponent1>();
-            WorldSerializer.Register<TestComponent2>();
-            WorldSerializer.Register<TestComponent3>();
+            Context = new EcsContext();
+            Context.Register<TestComponent1>();
+            Context.Register<TestComponent2>();
+            Context.Register<TestComponent3>();
         }
     }
 
@@ -117,8 +120,8 @@ namespace UnitTests.ECS.Serialization
         [ClassData(typeof(WorldStatesGenerator))]
         public void Serialize_Entities_DeserializeSerializedEntity(IEnumerable<Entity> entities)
         {
-            var serialized = _fixture.WorldSerializer.Serialize(entities);
-            var deserialized = _fixture.WorldSerializer.Deserialize(serialized);
+            var serialized = _fixture.WorldSerializer.Serialize(_fixture.Context, entities);
+            var deserialized = _fixture.WorldSerializer.Deserialize(_fixture.Context, serialized);
 
             Assert.True(Equal(entities, deserialized));
         }
@@ -138,7 +141,7 @@ namespace UnitTests.ECS.Serialization
                 {
                     var component1 = typeComponentPair.Value;
 
-                    if (_fixture.WorldSerializer.Registered.Contains(component1.GetType()))
+                    if (_fixture.Context.Registered.Contains(component1.GetType()))
                     {
                         var component2 = e2.Get(typeComponentPair.Key);
 
