@@ -5,6 +5,8 @@ using System.Reflection;
 using ECS.Core;
 using ECS.Serialization.Attributes;
 using ECS.Serialization.Converters;
+using ECS.Serialization.Readers;
+using ECS.Serialization.Tokenizers;
 using ECS.Serialization.Writers;
 
 namespace ECS.Serialization
@@ -18,6 +20,7 @@ namespace ECS.Serialization
 
         private readonly HashSet<Type> _registered = new HashSet<Type>();
 
+        private readonly Tokenizer _tokenizer = new Tokenizer();
         private readonly EntitySerializer _entitySerializer = new EntitySerializer();
 
         public IReadOnlyDictionary<int, Type> IdToType => _idToType;
@@ -29,19 +32,23 @@ namespace ECS.Serialization
         {
             var converterAttribute = GetConverterAttribute(typeof(T));
 
-            if (converterAttribute == null)
+            if (converterAttribute != null)
             {
-                throw new ArgumentException($"Компонент должен иметь атрибут {typeof(ComponentConverterAttribute)}.");
+                _converters[typeof(T)] = converterAttribute.ComponentConverter;
             }
-
-            _converters[typeof(T)] = converterAttribute.ComponentConverter;
 
             if (TypeToId.TryGetValue(typeof(T), out var id))
             {
                 return id;
             }
 
-            id = IdToType.Max(p => p.Key) + 1;
+            id = 0;
+
+            if (IdToType.Any())
+            {
+                id = IdToType.Max(p => p.Key) + 1;
+            }
+
             _idToType[id] = typeof(T);
             _typeToId[typeof(T)] = id;
             _registered.Add(typeof(T));
@@ -62,9 +69,21 @@ namespace ECS.Serialization
             return writer.ToString();
         }
 
-        public List<Entity> Deserialize()
+        public List<Entity> Deserialize(string input)
         {
-            return null;
+            var result = new List<Entity>();
+            var tokens = _tokenizer.Parse(input);
+            var reader = new SequentialReader(tokens);
+            // Читаем число сущностей.
+            int entityCount = reader.ReadInt32();
+
+            for (int i = 0; i < entityCount; i++)
+            {
+                var entity = _entitySerializer.Deserialize(this, reader);
+                result.Add(entity);
+            }
+
+            return result;
         }
 
         private ComponentConverterAttribute GetConverterAttribute(ICustomAttributeProvider t)

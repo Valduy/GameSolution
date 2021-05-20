@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ECS.Core;
-using ECS.Serialization.Attributes;
 using ECS.Serialization.Readers;
 using ECS.Serialization.Writers;
 
@@ -19,10 +17,13 @@ namespace ECS.Serialization
 
             foreach (var typeComponentPair in registeredTypeComponentPairs)
             {
-                var converter = worldSerializer.Converters[typeComponentPair.Key];
                 // Пишем id компонента.
                 writer.WriteInt32(worldSerializer.TypeToId[typeComponentPair.Key]);
-                converter.ToTokensSequence(typeComponentPair.Value, writer);
+
+                if (worldSerializer.Converters.TryGetValue(typeComponentPair.Key, out var converter))
+                {
+                    converter.ToTokensSequence(typeComponentPair.Value, writer);
+                }
             }
         }
 
@@ -30,15 +31,24 @@ namespace ECS.Serialization
         {
             var result = new Entity();
             // Читаем число компонентов.
-            int componentsCount = ReadInt32(reader);
+            int componentsCount = reader.ReadInt32();
 
             for (int i = 0; i < componentsCount; i++)
             {
                 // Читаем id компонентов.
-                int id = ReadInt32(reader);
+                int id = reader.ReadInt32();
                 var componentType = worldSerializer.IdToType[id];
-                var converter = worldSerializer.Converters[componentType];
-                var component = converter.FromTokenSequence(reader);
+                ComponentBase component = null;
+
+                if (worldSerializer.Converters.TryGetValue(componentType, out var converter))
+                {
+                    component = converter.FromTokenSequence(reader);
+                }
+                else
+                {
+                    component = Activator.CreateInstance(componentType) as ComponentBase;
+                }
+               
                 result.Add(component);
             }
 
@@ -51,22 +61,5 @@ namespace ECS.Serialization
             => entity
                 .Where(p => worldSerializer.Registered.Contains(p.Key))
                 .ToList();
-        
-        private int ReadInt32(ISequentialReader reader)
-        {
-            var componentsCount = 0;
-            var first = reader.Peek();
-
-            try
-            {
-                componentsCount = reader.ReadInt32();
-            }
-            catch (ArgumentException)
-            {
-                throw new EcsSerializationException($"Ожидалось целое число, а встречено {first}.");
-            }
-
-            return componentsCount;
-        }
     }
 }
