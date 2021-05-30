@@ -9,6 +9,7 @@ using Matchmaker.Exceptions;
 using Matchmaker.Helpers;
 using Matchmaker.Services;
 using Matchmaker.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -69,7 +70,11 @@ namespace Matchmaker.Controllers
             return Ok();
         }
 
-        [HttpPost("authorisation")]
+        [Authorize]
+        [HttpGet("authorization")]
+        public IActionResult CheckAuthorization() => Ok();
+
+        [HttpPost("authorization")]
         public async Task<IActionResult> Authorize([FromBody] UserViewModel model)
         {
             _logger.LogInformation($"Пользователь {model.Login} пытается авторизоваться.");
