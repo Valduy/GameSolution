@@ -6,7 +6,7 @@ namespace Connectors.MatchmakerConnectors
 {
     public interface IMatchmakerConnector
     {
-        Task<int?> ConnectAsync(
+        Task<int> ConnectAsync(
             ClientEndPoint privateEndPoint,
             string host,
             string bearerToken,

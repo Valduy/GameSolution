@@ -22,7 +22,7 @@ namespace Connectors.MatchmakerConnectors
         internal MatchmakerConnectorStateBase State { get; set; }
         internal int? MatchPort { get; set; }
 
-        public async Task<int?> ConnectAsync(
+        public async Task<int> ConnectAsync(
             ClientEndPoint privateEndPoint,
             string host,
             string bearerToken,
@@ -36,7 +36,7 @@ namespace Connectors.MatchmakerConnectors
                 = new AuthenticationHeaderValue("Bearer", bearerToken);
             State = new EnqueueState(this);
             await ConnectionLoopAsync();
-            return MatchPort;
+            return MatchPort.Value;
         }
 
         internal async Task<HttpResponseMessage> PostAsync(string uri, string json) 
