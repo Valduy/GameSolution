@@ -13,7 +13,7 @@ using Network.Messages;
 
 namespace Matches
 {
-    public class ListenSessionMatch : IMatch, IDisposable
+    public class ListenSessionMatch : IMatch
     {
         private readonly ILogger<ListenSessionMatch> _logger;
         private readonly UdpClient _udpClient;
@@ -108,16 +108,13 @@ namespace Matches
 
         private async Task ConnectionLoopAsync()
         {
-            LogInformation("Матч стартовал.");
-            LogInformation("Ожидание игроков.");
+            LogInformation("Матч начал работу.");
 
             while (_timer.ElapsedMilliseconds < TimeForStarting)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 await ConnectionFrameAsync();
             }
-
-            _udpClient.Close();
         }
 
         private async Task ConnectionFrameAsync()

@@ -6,7 +6,7 @@ using Network.Messages;
 
 namespace Matches
 {
-    public interface IMatch
+    public interface IMatch : IDisposable
     {
         int Port { get; }
         IEnumerable<ClientEndPoints> ExpectedPlayers { get; }

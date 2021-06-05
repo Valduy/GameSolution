@@ -9,9 +9,9 @@ namespace Matches.States
 {
     public class ChooseHostState : ListenSessionStateBase
     {
-        public ChooseHostState(ListenSessionMatch context) : base(context)
-        {
-        }
+        public ChooseHostState(ListenSessionMatch context) 
+            : base(context)
+        { }
 
         public override async Task ProcessMessageAsync(IPEndPoint ip, byte[] received)
         {

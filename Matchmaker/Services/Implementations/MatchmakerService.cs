@@ -11,7 +11,6 @@ using Network.Messages;
 
 namespace Matchmaker.Services
 {
-    // TODO: чистка давно не дававших о себе знать пользователей
     public class MatchmakerService : IMatchmakerService, IDisposable
     {
         private class ClientRecord
@@ -36,7 +35,7 @@ namespace Matchmaker.Services
 
         private readonly CancellationTokenSource _tokenSource;
         private readonly Dictionary<string, ClientRecord> _playersRecords = new Dictionary<string, ClientRecord>();
-        private readonly Dictionary<string, int> _playerToMatch = new Dictionary<string, int>();
+        private readonly Dictionary<string, IMatch> _playerToMatch = new Dictionary<string, IMatch>();
 
         private readonly IMatchFactory _matchFactory;
         private readonly ILogger<MatchmakerService> _logger;
@@ -119,10 +118,10 @@ namespace Matchmaker.Services
 
             lock (_playerToMatch)
             {
-                if (_playerToMatch.TryGetValue(userId, out var port))
+                if (_playerToMatch.TryGetValue(userId, out var match))
                 {
                     _logger.LogInformation($"Матч найден (id пользователя: {userId}).");
-                    return port;
+                    return match.Port;
                 }
 
                 _logger.LogInformation($"Матч не найден (id пользователя: {userId}).");
@@ -171,11 +170,11 @@ namespace Matchmaker.Services
                     _logger.LogInformation("Создаем матч.");
                     var playersPairs = _playersRecords.Take(PlayersPerMatch).ToList();
                     var playersEndPoints = playersPairs.Select(o => o.Value.EndPoints).ToList();
-                    var matchPort = StartNewMatch(playersEndPoints);
+                    var match = StartNewMatch(playersEndPoints);
 
                     lock (_playerToMatch)
                     {
-                        playersPairs.ForEach(o => _playerToMatch[o.Key] = matchPort);
+                        playersPairs.ForEach(o => _playerToMatch[o.Key] = match);
                     }
 
                     playersPairs.ForEach(o => _playersRecords.Remove(o.Key));
@@ -183,29 +182,34 @@ namespace Matchmaker.Services
             }
         }
 
-        private int StartNewMatch(IReadOnlyCollection<ClientEndPoints> playersEndPoints)
+        private IMatch StartNewMatch(IReadOnlyCollection<ClientEndPoints> playersEndPoints)
         {
             var match = _matchFactory.CreateMatch(playersEndPoints);
-            match.MatchStarted += OnMatchStarted;
-            Task.Run(async () => await match.WorkAsync(_tokenSource.Token), _tokenSource.Token);
+            match.MatchStarted += RemoveAssociatedPlayers;
+
+            Task.Run(async () => await match.WorkAsync(_tokenSource.Token), _tokenSource.Token)
+                .ContinueWith(t =>
+                {
+                    if (!t.IsCompletedSuccessfully)
+                    {
+                        RemoveAssociatedPlayers(match);
+                    }
+
+                    match.Dispose();
+                });
+
             _logger.LogInformation($"Матч запущен на порту {match.Port}.");
-            return match.Port;
+            return match;
         }
 
-        private void OnMatchStarted(IMatch match)
+        private void RemoveAssociatedPlayers(IMatch match)
         {
-            _logger.LogInformation($"Матч стартовал (порт: {match.Port}).");
-
             lock (_playerToMatch)
             {
-                var matchPlayers = _playerToMatch
-                    .Where(o => o.Value == match.Port)
-                    .Select(o => o.Key);
-
-                foreach (var player in matchPlayers)
-                {
-                    _playerToMatch.Remove(player);
-                }
+                 _playerToMatch
+                     .Where(pair => pair.Value == match)
+                     .ToList()
+                     .ForEach(pair => _playerToMatch.Remove(pair.Key));
             }
         }
 
