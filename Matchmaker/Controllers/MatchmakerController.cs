@@ -11,7 +11,7 @@ using Network.Messages;
 namespace Matchmaker.Controllers
 {
     [Route("api/[controller]")]
-    public class MatchmakerController : Controller
+    public class MatchmakerController : ControllerBase
     {
         private static readonly string LocalIp = NetworkHelper.GetLocalIPAddress();
 
