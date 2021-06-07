@@ -17,6 +17,7 @@ namespace Matches.States
         {
             var messageForHost = new ConnectionMessage
             {
+                SessionId = Context.SessionId,
                 Role = Role.Host,
                 Clients = Context.Clients.ToList(),
             };
@@ -24,6 +25,7 @@ namespace Matches.States
 
             var messageForClient = new ConnectionMessage
             {
+                SessionId = Context.SessionId,
                 Role = Role.Client,
                 Clients = new List<ClientEndPoints> {Context.Host}
             };

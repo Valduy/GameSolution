@@ -7,45 +7,39 @@ using System.Threading;
 using System.Threading.Tasks;
 using Network;
 using Network.Messages;
+using Newtonsoft.Json;
 
 namespace Connectors.HolePuncher
 {
-    public enum ConnectionAction
-    {
-        Check,
-        Confirm,
-    }
-
     public class HolePuncher : IHolePuncher
     {
         private const int LoopDelay = 1000;
 
-        private readonly byte[] CheckMessage;
-        private readonly byte[] ConfirmMessage;
+        private byte[] _checkMessage;
+        private byte[] _confirmMessage;
 
         private UdpClient _udpClient;
+        private uint _sessionId;
         private CancellationToken _cancellationToken;
 
         private List<ClientEndPoints> _potentials;
         private HashSet<IPEndPoint> _requesters;
         private List<IPEndPoint> _confirmed;
 
-        public HolePuncher()
-        {
-            CheckMessage = GetConnectionMessage(ConnectionAction.Check);
-            ConfirmMessage = GetConnectionMessage(ConnectionAction.Confirm);
-        }
-
         public async Task<List<IPEndPoint>> ConnectAsync(
             UdpClient udpClient, 
+            uint sessionId,
             IEnumerable<ClientEndPoints> clients, 
             CancellationToken cancellationToken = default)
         {
             _udpClient = udpClient;
+            _sessionId = sessionId;
             _cancellationToken = cancellationToken;
             _potentials = new List<ClientEndPoints>(clients);
             _requesters = new HashSet<IPEndPoint>();
             _confirmed = new List<IPEndPoint>();
+            _checkMessage = GetConnectionMessage(ConnectionAction.Check);
+            _confirmMessage = GetConnectionMessage(ConnectionAction.Confirm);
             await ConnectionLoop();
             return _confirmed;
         }
@@ -77,15 +71,15 @@ namespace Connectors.HolePuncher
             {
                 if (IsLoopback(client.PublicEndPoint.Ip))
                 {
-                    await SendMessage(CheckMessage, client.PublicEndPoint);
+                    await SendMessage(_checkMessage, client.PublicEndPoint);
                 }
                 
-                await SendMessage(CheckMessage, client.PrivateEndPoint);
+                await SendMessage(_checkMessage, client.PrivateEndPoint);
             }
 
             foreach (var endPoint in _requesters)
             {
-                await SendMessage(ConfirmMessage, endPoint);
+                await SendMessage(_confirmMessage, endPoint);
             }
         }
 
@@ -93,30 +87,43 @@ namespace Connectors.HolePuncher
         {
             if (MessageHelper.GetMessageType(message) == NetworkMessages.Connect)
             {
-                switch (ToConnectionAction(message))
+                try
                 {
-                    case ConnectionAction.Check:
+                    var data = ToConnectionMessage(message);
+                    if (data.SessionId != _sessionId) return;
+
+                    switch (data.ConnectionAction)
                     {
-                        if (TryGetFromPotentials(endPoint, out var client))
+                        case ConnectionAction.Check:
                         {
-                            _potentials.Remove(client);
-                            _requesters.Add(endPoint);
+                            if (TryGetFromPotentials(endPoint, out var client))
+                            {
+                                _potentials.Remove(client);
+                                _requesters.Add(endPoint);
+                            }
+                            break;
                         }
-                        break;
+                        case ConnectionAction.Confirm:
+                        {
+                            if (TryGetFromPotentials(endPoint, out var client))
+                            {
+                                _potentials.Remove(client);
+                                _confirmed.Add(endPoint);
+                            }
+                            else if (_requesters.Contains(endPoint))
+                            {
+                                _requesters.Remove(endPoint);
+                                _confirmed.Add(endPoint);
+                            }
+                            break;
+                        }
                     }
-                    case ConnectionAction.Confirm:
+                }
+                catch (Exception ex)
+                {
+                    if (ex is JsonReaderException || ex is ArgumentNullException)
                     {
-                        if (TryGetFromPotentials(endPoint, out var client))
-                        {
-                            _potentials.Remove(client);
-                            _confirmed.Add(endPoint);
-                        }
-                        else if (_requesters.Contains(endPoint))
-                        {
-                            _requesters.Remove(endPoint);
-                            _confirmed.Add(endPoint);
-                        }
-                        break;
+                        // TODO: лог о неправильном JSON'е?
                     }
                 }
             }
@@ -131,11 +138,15 @@ namespace Connectors.HolePuncher
         private bool IsLoopback(string ip) 
             => IPAddress.IsLoopback(IPAddress.Parse(ip));
 
-        private byte[] GetConnectionMessage(ConnectionAction action)
-            => MessageHelper.GetMessage(NetworkMessages.Connect, BitConverter.GetBytes((int)action));
+        private byte[] GetConnectionMessage(ConnectionAction action) 
+            => MessageHelper.GetMessage(NetworkMessages.Connect, JsonConvert.SerializeObject(new HolePuncherMessage
+            {
+                SessionId = _sessionId,
+                ConnectionAction = action,
+            }));
 
-        private ConnectionAction ToConnectionAction(byte[] message) 
-            => (ConnectionAction) BitConverter.ToInt32(MessageHelper.ToByteArray(message), 0);
+        private HolePuncherMessage ToConnectionMessage(byte[] message) 
+            => JsonConvert.DeserializeObject<HolePuncherMessage>(MessageHelper.ToString(message));
 
         private bool TryGetFromPotentials(IPEndPoint endPoint, out ClientEndPoints client)
         {

@@ -11,6 +11,7 @@ namespace Connectors.HolePuncher
     {
         Task<List<IPEndPoint>> ConnectAsync(
             UdpClient udpClient,
+            uint sessionId,
             IEnumerable<ClientEndPoints> clients,
             CancellationToken cancellationToken = default);
     }

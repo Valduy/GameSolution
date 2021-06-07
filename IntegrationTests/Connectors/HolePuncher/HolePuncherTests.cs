@@ -56,9 +56,9 @@ namespace IntegrationTests.Connectors.HolePuncher
 
             // Act
             var holePunchingTask1 = Task.Run(
-                async () => await holePuncher1.ConnectAsync(udpClient1, connectionMessage1.Clients));
+                async () => await holePuncher1.ConnectAsync(udpClient1, 1, connectionMessage1.Clients));
             var holePunchingTask2 = Task.Run(
-                async () => await holePuncher2.ConnectAsync(udpClient2, connectionMessage2.Clients));
+                async () => await holePuncher2.ConnectAsync(udpClient2, 1, connectionMessage2.Clients));
 
             var clients1 = await holePunchingTask1;
             var clients2 = await holePunchingTask2;

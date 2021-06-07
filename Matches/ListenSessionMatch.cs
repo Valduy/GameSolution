@@ -15,6 +15,9 @@ namespace Matches
 {
     public class ListenSessionMatch : IMatch
     {
+        private static uint LastSessionId;
+
+        private readonly object _locker = new object();
         private readonly ILogger<ListenSessionMatch> _logger;
         private readonly UdpClient _udpClient;
 
@@ -27,12 +30,25 @@ namespace Matches
         public int Port { get; }
         public long TimeForStarting { get; }
 
-
+        public uint SessionId { get; set; }
         public IReadOnlyList<ClientEndPoints> Clients => _clients;
         public ClientEndPoints Host => _host;
-
+        
         internal ListenSessionStateBase State { get; set; }
 
+        private uint NextSessionId
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    unchecked
+                    {
+                        return LastSessionId++;
+                    }
+                }
+            }
+        }
 
         public event Action<IMatch> MatchStarted;
 
@@ -62,6 +78,7 @@ namespace Matches
             int port, 
             ILogger<ListenSessionMatch> logger = null)
         {
+            SessionId = NextSessionId;
             _logger = logger;
             ExpectedPlayers = playersEndPoints;
             TimeForStarting = timeForStarting;
