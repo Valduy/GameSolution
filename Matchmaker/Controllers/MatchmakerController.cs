@@ -27,7 +27,7 @@ namespace Matchmaker.Controllers
         }
 
         [Authorize]
-        [HttpPost("queue")]
+        [HttpPut("queue")]
         public void Enqueue([FromBody]ClientEndPoint privateEndPoint)
         {
             var userId = User.GetName();

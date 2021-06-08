@@ -39,8 +39,8 @@ namespace Connectors.MatchmakerConnectors
             return MatchPort.Value;
         }
 
-        internal async Task<HttpResponseMessage> PostAsync(string uri, string json) 
-            => await _client.PostAsync(
+        internal async Task<HttpResponseMessage> PutAsync(string uri, string json) 
+            => await _client.PutAsync(
                 uri, 
                 new StringContent(json, Encoding.UTF8, "application/json"), 
                 _cancellationToken);

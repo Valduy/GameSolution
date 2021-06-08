@@ -15,7 +15,7 @@ namespace Connectors.MatchmakerConnectors
 
         public override async Task ConnectAsync()
         {
-            var response = await Context.PostAsync($"{Context.Host}/api/matchmaker/queue", _json);
+            var response = await Context.PutAsync($"{Context.Host}/api/matchmaker/queue", _json);
 
             if (response.IsSuccessStatusCode)
             {

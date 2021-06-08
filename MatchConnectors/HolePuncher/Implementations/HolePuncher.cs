@@ -69,11 +69,7 @@ namespace Connectors.HolePuncher
         {
             foreach (var client in _potentials)
             {
-                if (IsLoopback(client.PublicEndPoint.Ip))
-                {
-                    await SendMessage(_checkMessage, client.PublicEndPoint);
-                }
-                
+                await SendMessage(_checkMessage, client.PublicEndPoint);
                 await SendMessage(_checkMessage, client.PrivateEndPoint);
             }
 
@@ -134,9 +130,6 @@ namespace Connectors.HolePuncher
 
         private async Task SendMessage(byte[] message, IPEndPoint endPoint)
             => await _udpClient.SendAsync(message, message.Length, endPoint);
-
-        private bool IsLoopback(string ip) 
-            => IPAddress.IsLoopback(IPAddress.Parse(ip));
 
         private byte[] GetConnectionMessage(ConnectionAction action) 
             => MessageHelper.GetMessage(NetworkMessages.Connect, JsonConvert.SerializeObject(new HolePuncherMessage
