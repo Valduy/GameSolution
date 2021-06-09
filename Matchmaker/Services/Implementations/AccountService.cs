@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using BCrypt.Net;
 using Context;
 using Matchmaker.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +31,10 @@ namespace Matchmaker.Services
             }
         }
 
-        public async Task<User> AuthenticateAsync(User user) 
-            => await _gameContext.Users.FirstOrDefaultAsync(u => u.Login == user.Login);
+        public async Task<User> AuthenticateAsync(User user)
+        {
+            var result = await _gameContext.Users.FirstOrDefaultAsync(u => u.Login == user.Login);
+            return BC.Verify(user.Password, result.Password) ? result : null;
+        }
     }
 }
