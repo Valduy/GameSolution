@@ -19,7 +19,16 @@ namespace Connectors.MatchmakerConnectors
 
             if (response.IsSuccessStatusCode)
             {
-                Context.State = new WaitState(Context);
+                var data = await response.Content.ReadAsStringAsync();
+
+                if (bool.Parse(data))
+                {
+                    Context.State = new WaitState(Context);
+                }
+                else
+                {
+                    throw new ConnectorException("Пользователь уже нахоидся в очереди.");
+                }
             }
             else
             {

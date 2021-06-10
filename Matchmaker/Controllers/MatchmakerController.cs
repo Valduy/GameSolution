@@ -28,13 +28,13 @@ namespace Matchmaker.Controllers
 
         [Authorize]
         [HttpPut("queue")]
-        public void Enqueue([FromBody]ClientEndPoint privateEndPoint)
+        public bool Enqueue([FromBody]ClientEndPoint privateEndPoint)
         {
             var userId = User.GetName();
             _logger.LogInformation($"Запрос на постановку в очередь (id пользователя: {userId}).");
             var publicEndPoint = new ClientEndPoint(GetClientIp(), 0);
             var endPoints = new ClientEndPoints(publicEndPoint, privateEndPoint);
-            _matchmakerService.Enqueue(userId, endPoints);
+            return _matchmakerService.Enqueue(userId, endPoints);
         }
 
         [Authorize]

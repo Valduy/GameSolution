@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Matches;
 using Matchmaker.Factories;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic.CompilerServices;
 using Network;
 using Network.Messages;
 
@@ -16,13 +17,9 @@ namespace Matchmaker.Services
         private class ClientRecord
         {
             public ClientEndPoints EndPoints { get; }
-            public int LastRequestTime { get; set; }
+            public long LastRequestTime { get; set; }
 
-            public ClientRecord(ClientEndPoints endPoints) 
-                : this(endPoints, DateTime.Now.Millisecond)
-            { }
-
-            public ClientRecord(ClientEndPoints endPoints, int lastRequestTime)
+            public ClientRecord(ClientEndPoints endPoints, long lastRequestTime)
             {
                 EndPoints = endPoints;
                 LastRequestTime = lastRequestTime;
@@ -79,7 +76,7 @@ namespace Matchmaker.Services
                     return false;
                 }
 
-                _playersRecords[userId] = new ClientRecord(endPoints);
+                _playersRecords[userId] = new ClientRecord(endPoints, GetCurrentTime());
                 _logger.LogInformation($"Пользователь добавлен в очередь (id пользователя: {userId}).");
                 return true;
             }
@@ -94,7 +91,7 @@ namespace Matchmaker.Services
                 if (_playersRecords.TryGetValue(userId, out var record))
                 {
                     _logger.LogInformation($"Пользователь ожидает (id пользователя: {userId}).");
-                    record.LastRequestTime = DateTime.Now.Millisecond;
+                    record.LastRequestTime = GetCurrentTime();
                     return UserStatus.Wait;
                 }
             }
@@ -217,12 +214,15 @@ namespace Matchmaker.Services
         {
             lock (_playersRecords)
             {
-                int currentTime = DateTime.Now.Millisecond;
+                long currentTime = GetCurrentTime();
                 _playersRecords
                     .Where(record => currentTime - record.Value.LastRequestTime > AllowedDelta)
                     .ToList()
                     .ForEach(pair => _playersRecords.Remove(pair.Key));
             }
         }
+
+        private long GetCurrentTime() 
+            => ((DateTimeOffset)DateTime.Now).ToUnixTimeMilliseconds();
     }
 }
