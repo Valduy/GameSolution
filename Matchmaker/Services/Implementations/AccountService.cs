@@ -34,7 +34,9 @@ namespace Matchmaker.Services
         public async Task<User> AuthenticateAsync(User user)
         {
             var result = await _gameContext.Users.FirstOrDefaultAsync(u => u.Login == user.Login);
-            return BC.Verify(user.Password, result.Password) ? result : null;
+            return result != null 
+                ? BC.Verify(user.Password, result.Password) ? result : null
+                : null;
         }
     }
 }
