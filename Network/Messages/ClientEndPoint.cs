@@ -4,8 +4,7 @@
     {
         public string Ip { get; set; }
         public int Port { get; set; }
-
-
+        
         public ClientEndPoint()
         { }
 

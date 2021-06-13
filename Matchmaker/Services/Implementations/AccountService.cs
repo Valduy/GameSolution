@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using BCrypt.Net;
 using Context;
 using Matchmaker.Exceptions;
 using Microsoft.EntityFrameworkCore;

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Matches;
 using Matchmaker.Factories;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic.CompilerServices;
 using Network;
 using Network.Messages;
 

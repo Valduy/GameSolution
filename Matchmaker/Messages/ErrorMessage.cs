@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Matchmaker.Messages
+﻿namespace Matchmaker.Messages
 {
     public class ErrorMessage
     {
