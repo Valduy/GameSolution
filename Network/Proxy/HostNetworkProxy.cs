@@ -42,11 +42,8 @@ namespace Network.Proxy
             foreach (var client in Clients)
             {
                 _readBuffers[client] = new ConcurrentNetworkBuffer(ReceiveBufferSize);
-            }
-
-            foreach (var client in Clients)
-            {
                 _writeBuffers[client] = new ConcurrentNetworkBuffer(SendBufferSize);
+                _receivedPacketsNumber[client] = 0;
             }
 
             Task.Run(SendLoopAsync);
@@ -117,7 +114,7 @@ namespace Network.Proxy
 
                     if (packetNumber >= _receivedPacketsNumber[result.RemoteEndPoint])
                     {
-                        buffer.Write(result.Buffer);
+                        buffer.Write(PacketHelper.GetData(result.Buffer));
                         _receivedPacketsNumber[result.RemoteEndPoint] = packetNumber;
                     }
                 }
