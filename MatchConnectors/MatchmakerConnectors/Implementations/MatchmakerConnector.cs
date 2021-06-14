@@ -69,20 +69,13 @@ namespace Connectors.MatchmakerConnectors
                 {
                     try
                     {
-                        await NotifyAboutCancellation(TimeForNotification);
+                        await _client.DeleteAsync($"{Host}/api/matchmaker/queue");
                     }
-                    catch (TaskCanceledException) { }
+                    catch { }
                 }
 
                 _client.Dispose();
             }
-        }
-
-        private async Task NotifyAboutCancellation(int timeout)
-        {
-            var tokenSource = new CancellationTokenSource();
-            tokenSource.CancelAfter(timeout);
-            await _client.DeleteAsync($"{Host}/api/queue", tokenSource.Token);
         }
     }
 }

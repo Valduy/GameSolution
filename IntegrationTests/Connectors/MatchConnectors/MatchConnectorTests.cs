@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -16,7 +17,6 @@ namespace Connectors.Tests.Integration
         [Fact]
         public async Task ConnectAsyncTest()
         {
-            // Arrange
             var udpClient1 = new UdpClient(0);
             var udpClient2 = new UdpClient(0);
 
@@ -33,7 +33,6 @@ namespace Connectors.Tests.Integration
 
             var match = new ListenSessionMatch(new []{endPoints1, endPoints2});
 
-            // Act
             var tokenSource = new CancellationTokenSource();
             _ = Task.Run(async () => await match.WorkAsync(tokenSource.Token), tokenSource.Token);
 
@@ -53,9 +52,45 @@ namespace Connectors.Tests.Integration
             var connectionMessage2 = await connectorTask2;
             tokenSource.Cancel();
 
-            // Assert
             Assert.True(connectionMessage1.Clients.First().PrivateEndPoint.IsSame(privateEndPoint2));
             Assert.True(connectionMessage2.Clients.First().PrivateEndPoint.IsSame(privateEndPoint1));
+        }
+
+        [Fact]
+        public async Task ConnectionFailureTest()
+        {
+            var udpClient1 = new UdpClient(0);
+            var udpClient2 = new UdpClient(0);
+
+            var publicEndPoint1 = new ClientEndPoint(IPAddress.Loopback.ToString(), 0);
+            var privateEndPoint1 = new ClientEndPoint(NetworkHelper.GetLocalIPAddress(), udpClient1.GetPort());
+            var endPoints1 = new ClientEndPoints(publicEndPoint1, privateEndPoint1);
+
+            var publicEndPoint2 = new ClientEndPoint(IPAddress.Loopback.ToString(), 0);
+            var privateEndPoint2 = new ClientEndPoint(NetworkHelper.GetLocalIPAddress(), udpClient2.GetPort());
+            var endPoints2 = new ClientEndPoints(publicEndPoint2, privateEndPoint2);
+
+            var connector1 = new MatchConnector();
+
+            var match = new ListenSessionMatch(new[] { endPoints1, endPoints2 });
+
+            var tokenSource = new CancellationTokenSource();
+            _ = Task.Run(async () => await match.WorkAsync(tokenSource.Token), tokenSource.Token);
+
+            var connectorTask1 = connector1.ConnectAsync(udpClient1, IPAddress.Loopback.ToString(), match.Port);
+            
+            Assert.Throws<ConnectorException>(() =>
+            {
+                try
+                {
+                    var result = connectorTask1.Result;
+                }
+                catch (AggregateException e)
+                {
+                    tokenSource.Cancel();
+                    throw e.InnerException;
+                }
+            });
         }
     }
 }

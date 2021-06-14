@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Network;
@@ -63,49 +62,25 @@ namespace Connectors.MatchConnectors
         {
             await State.SendMessageAsync();
 
-            while (_isRun && _udpClient.Available > 0)
+            if (_udpClient.Available > 0)
             {
-                if (TryReceive(out var message))
-                {
-                    State.ProcessMessage(message);
-                    _currentAttempts = 0;
-                }
-                else
-                {
-                    _currentAttempts++;
+                _currentAttempts = 0;
 
-                    if (_currentAttempts >= MaxAttempts)
-                    {
-                        throw new ConnectorException("Потеряно соединение с сервером.");
-                    }
+                while (_isRun && _udpClient.Available > 0)
+                {
+                    var result = await _udpClient.ReceiveAsync();
+                    State.ProcessMessage(result.Buffer);
+                }
+            }
+            else
+            {
+                _currentAttempts++;
+
+                if (_currentAttempts >= MaxAttempts)
+                {
+                    throw new ConnectorException("Потеряно соединение с сервером.");
                 }
             }
         }
-
-        private bool TryReceive(out byte[] message)
-        {
-            try
-            {
-                SetSocketTimeout();
-                IPEndPoint endPoint = null;
-                message = _udpClient.Receive(ref endPoint);
-                return true;
-            }
-            catch (SocketException)
-            {
-                message = null;
-                return false;
-            }
-            finally
-            {
-                ResetSocketTimeout();
-            }
-        }
-
-        private void SetSocketTimeout() 
-            => _udpClient.Client.ReceiveTimeout = ReceiveTimeout;
-
-        private void ResetSocketTimeout() 
-            => _udpClient.Client.ReceiveTimeout = 0;
     }
 }

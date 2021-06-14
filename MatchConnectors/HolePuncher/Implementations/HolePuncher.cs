@@ -15,6 +15,7 @@ namespace Connectors.HolePuncher
     {
         private const int LoopDelay = 1000;
 
+        private int _currentAttempts;
         private byte[] _checkMessage;
         private byte[] _confirmMessage;
 
@@ -25,6 +26,8 @@ namespace Connectors.HolePuncher
         private List<ClientEndPoints> _potentials;
         private HashSet<IPEndPoint> _requesters;
         private List<IPEndPoint> _confirmed;
+
+        public int MaxAttempts { get; set; } = 10;
 
         public async Task<List<IPEndPoint>> ConnectAsync(
             UdpClient udpClient, 
@@ -58,10 +61,24 @@ namespace Connectors.HolePuncher
         {
             await SendMessages();
 
-            while (_udpClient.Available > 0)
+            if (_udpClient.Available > 0)
             {
-                var result = await _udpClient.ReceiveAsync();
-                ProcessMessage(result.Buffer, result.RemoteEndPoint);
+                _currentAttempts = 0;
+
+                while (_udpClient.Available > 0)
+                {
+                    var result = await _udpClient.ReceiveAsync();
+                    ProcessMessage(result.Buffer, result.RemoteEndPoint);
+                }
+            }
+            else
+            {
+                _currentAttempts++;
+
+                if (_currentAttempts >= MaxAttempts)
+                {
+                    throw new ConnectorException("Не удалось соединиться с другими игроками.");
+                }
             }
         }
 
@@ -70,7 +87,11 @@ namespace Connectors.HolePuncher
             foreach (var client in _potentials)
             {
                 await SendMessage(_checkMessage, client.PublicEndPoint);
-                await SendMessage(_checkMessage, client.PrivateEndPoint);
+
+                if (!IPAddress.IsLoopback(IPAddress.Parse(client.PublicEndPoint.Ip)))
+                {
+                    await SendMessage(_checkMessage, client.PrivateEndPoint);
+                }
             }
 
             foreach (var endPoint in _requesters)
