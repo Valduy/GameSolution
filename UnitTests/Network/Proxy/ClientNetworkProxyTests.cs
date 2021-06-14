@@ -73,15 +73,18 @@ namespace UnitTests.Network.Proxy
 
             _fixture.ClientProxy.WriteBuffer.Write(message);
             var received = _fixture.HostUdpClient.Receive(ref endPoint);
+            var data = PacketHelper.GetData(received);
 
-            Assert.Equal(message, received);
+            Assert.Equal(message, data);
         }
 
         [Theory]
         [ClassData(typeof(MessagesGenerator))]
         public void ReadFromReadBuffer_Messages_SendedMessages(byte[] message)
         {
-            _fixture.HostUdpClient.Send(message, message.Length,
+            var packet = PacketHelper.CreatePacket(0, message);
+
+            _fixture.HostUdpClient.Send(packet, packet.Length,
                 new IPEndPoint(IPAddress.Loopback, _fixture.ClientUdpClient.GetPort()));
             while (_fixture.ClientProxy.ReadBuffer.IsEmpty);
             var received = _fixture.ClientProxy.ReadBuffer.ReadLast();

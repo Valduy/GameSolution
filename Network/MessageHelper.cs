@@ -5,7 +5,7 @@ namespace Network
 {
     public static class MessageHelper
     {
-        public const int HeaderSize = sizeof(int);
+        public const int HeaderSize = sizeof(uint);
 
         public static NetworkMessages GetMessageType(byte[] message)
             => (NetworkMessages)BitConverter.ToUInt32(message, 0);
@@ -18,7 +18,7 @@ namespace Network
         public static byte[] GetMessage(NetworkMessages type)
         {
             var message = new byte[HeaderSize];
-            WriteMessageType(type, message);
+            BytesHelper.WriteUInt32((uint)type, message);
             return message;
         }
 
@@ -31,8 +31,8 @@ namespace Network
         public static byte[] GetMessage(NetworkMessages type, byte[] data)
         {
             var message = new byte[HeaderSize + data.Length];
-            WriteMessageType(type, message);
-            WriteData(data, message);
+            BytesHelper.WriteUInt32((uint)type, message);
+            BytesHelper.WriteData(data, message, HeaderSize);
             return message;
         }
 
@@ -45,8 +45,8 @@ namespace Network
         public static byte[] GetMessage(NetworkMessages type, string data)
         {
             var message = new byte[HeaderSize + data.Length];
-            WriteMessageType(type, message);
-            WriteData(data, message);
+            BytesHelper.WriteUInt32((uint)type, message);
+            BytesHelper.WriteData(data, message, HeaderSize);
             return message;
         }
 
@@ -55,41 +55,10 @@ namespace Network
         /// </summary>
         /// <param name="message">Сообщение.</param>
         /// <returns>Данные.</returns>
-        public static byte[] ToByteArray(byte[] message)
-        {
-            var data = new byte[message.Length - HeaderSize];
-            Array.Copy(message, HeaderSize, data, 0, data.Length);
-            return data;
-        }
+        public static byte[] ToByteArray(byte[] message) =>
+            BytesHelper.ReadBytes(message, HeaderSize, message.Length - HeaderSize);
 
         public static string ToString(byte[] message) 
             => Encoding.ASCII.GetString(message, HeaderSize, message.Length - HeaderSize);
-
-        private static void WriteMessageType(NetworkMessages type, byte[] message)
-        {
-            uint value = (uint) type;
-
-            for (int i = 0; i < HeaderSize; i++)
-            {
-                message[i] = (byte)(value & 0x000000ff);
-                value >>= 8;
-            }
-        }
-
-        private static void WriteData(byte[] data, byte[] message)
-        {
-            for (int i = 0; i < data.Length; i++)
-            {
-                message[HeaderSize + i] = data[i];
-            }
-        }
-
-        private static void WriteData(string data, byte[] message)
-        {
-            for (int i = 0; i < data.Length; i++)
-            {
-                message[HeaderSize + i] = (byte)data[i];
-            }
-        }
     }
 }

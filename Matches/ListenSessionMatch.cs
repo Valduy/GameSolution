@@ -15,7 +15,7 @@ namespace Matches
 {
     public class ListenSessionMatch : IMatch
     {
-        private static uint LastSessionId;
+        private static uint _lastSessionId;
 
         private readonly object _locker = new object();
         private readonly ILogger<ListenSessionMatch> _logger;
@@ -44,7 +44,7 @@ namespace Matches
                 {
                     unchecked
                     {
-                        return LastSessionId++;
+                        return _lastSessionId++;
                     }
                 }
             }

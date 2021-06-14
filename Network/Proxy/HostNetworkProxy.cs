@@ -19,6 +19,9 @@ namespace Network.Proxy
 
         private CancellationTokenSource _tokenSource;
 
+        private uint _sentPacketNumber;
+        private Dictionary<IPEndPoint, uint> _receivedPacketsNumber;
+
         public IEnumerable<IPEndPoint> Clients { get; }
 
         public HostNetworkProxy(UdpClient udpClient, IEnumerable<IPEndPoint> clients)
@@ -34,6 +37,7 @@ namespace Network.Proxy
             _tokenSource = new CancellationTokenSource();
             _readBuffers = new Dictionary<IPEndPoint, ConcurrentNetworkBuffer>();
             _writeBuffers = new Dictionary<IPEndPoint, ConcurrentNetworkBuffer>();
+            _receivedPacketsNumber = new Dictionary<IPEndPoint, uint>();
 
             foreach (var client in Clients)
             {
@@ -76,10 +80,13 @@ namespace Network.Proxy
 
                 while (!buffer.IsEmpty)
                 {
-                    var message = buffer.Read();
-                    await _udpClient.SendAsync(message, message.Length, clientBufferPair.Key);
+                    var data = buffer.Read();
+                    var packet = PacketHelper.CreatePacket(_sentPacketNumber, data);
+                    await _udpClient.SendAsync(packet, packet.Length, clientBufferPair.Key);
                 }
             }
+
+            _sentPacketNumber++;
         }
 
         private async Task ReceiveLoopAsync()
@@ -106,7 +113,13 @@ namespace Network.Proxy
 
                 if (_readBuffers.TryGetValue(result.RemoteEndPoint, out var buffer))
                 {
-                    buffer.Write(result.Buffer);
+                    var packetNumber = PacketHelper.GetNumber(result.Buffer);
+
+                    if (packetNumber >= _receivedPacketsNumber[result.RemoteEndPoint])
+                    {
+                        buffer.Write(result.Buffer);
+                        _receivedPacketsNumber[result.RemoteEndPoint] = packetNumber;
+                    }
                 }
             }
         }

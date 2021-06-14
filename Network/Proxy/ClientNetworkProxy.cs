@@ -12,16 +12,21 @@ namespace Network.Proxy
         private const int SendBufferSize = 10;
         private const int ReceiveBufferSize = 20;
 
+        public const int HeaderSize = sizeof(uint); 
+
         private readonly UdpClient _udpClient;
 
         private CancellationTokenSource _tokenSource;
         private ConcurrentNetworkBuffer _writeBuffer;
         private ConcurrentNetworkBuffer _readBuffer;
 
+        private uint _sentPacketNumber;
+        private uint _receivedPacketNumber;
+
         public IPEndPoint Host { get; }
         public IWriteOnlyNetworkBuffer WriteBuffer => _writeBuffer;
         public IReadOnlyNetworkBuffer ReadBuffer => _readBuffer;
-
+        
         public ClientNetworkProxy(UdpClient udpClient, IPEndPoint host)
         {
             _udpClient = udpClient;
@@ -59,8 +64,9 @@ namespace Network.Proxy
         {
             while (!_writeBuffer.IsEmpty)
             {
-                var message = _writeBuffer.Read();
-                await _udpClient.SendAsync(message, message.Length, Host);
+                var data = _writeBuffer.Read();
+                var packet = PacketHelper.CreatePacket(_sentPacketNumber++, data);
+                await _udpClient.SendAsync(packet, packet.Length, Host);
             }
         }
 
@@ -88,7 +94,13 @@ namespace Network.Proxy
 
                 if (Equals(result.RemoteEndPoint, Host))
                 {
-                    _readBuffer.Write(result.Buffer);
+                    var packetNumber = PacketHelper.GetNumber(result.Buffer);
+
+                    if (packetNumber >= _receivedPacketNumber)
+                    {
+                        _readBuffer.Write(PacketHelper.GetData(result.Buffer));
+                        _receivedPacketNumber = packetNumber;
+                    }
                 }
             }
         }
