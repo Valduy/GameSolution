@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Connectors.HolePuncher;
 using Connectors.MatchConnectors;
+using Network.Messages;
+using Network.Proxy;
 
 namespace FakeClient
 {
@@ -31,45 +33,42 @@ namespace FakeClient
                 Console.WriteLine($"{ep}");
             }
 
-            var readTask = Task.Run(() =>
+            switch (result.Role)
             {
-                IPEndPoint ip = null;
-
-                while (true)
+                case Role.Host:
                 {
-                    if (udpClient.Available > 0)
+                    var hostProxy = new HostNetworkProxy(udpClient, endPoints);
+                    while (true)
                     {
-                        lock (udpClient)
+                        hostProxy.GetWriteBuffer(endPoints[0]).Write(Encoding.ASCII.GetBytes("From host!"));
+                        var buffer = hostProxy.GetReadBuffer(endPoints[0]);
+
+                        if (!buffer.IsEmpty)
                         {
-
-                            var bytes = udpClient.Receive(ref ip);
-                            var message = Encoding.ASCII.GetString(bytes);
-                            Console.WriteLine("Received message:");
-                            Console.WriteLine(message);
-                            Console.WriteLine("Enter message:");
+                            Console.WriteLine(Encoding.ASCII.GetString(buffer.ReadLast()));
                         }
-                    }
-                }
-            });
 
-            var writeTask = Task.Run(() =>
-            {
-                while (true)
+                        await Task.Delay(1000);
+                    }
+                    break;
+                }
+                case Role.Client:
                 {
-                    var message = Console.ReadLine();
-                    var bytes = Encoding.ASCII.GetBytes(message ?? string.Empty);
-
-                    lock (udpClient)
+                    var clientProxy = new ClientNetworkProxy(udpClient, endPoints[0]);
+                    while (true)
                     {
-                        foreach (var ep in endPoints)
-                        {
-                            udpClient.Send(bytes, bytes.Length, ep);
-                        }
-                    }
-                }
-            });
+                        clientProxy.WriteBuffer.Write(Encoding.ASCII.GetBytes("From client!"));
 
-            Task.WaitAll(readTask, writeTask);
+                        if (!clientProxy.ReadBuffer.IsEmpty)
+                        {
+                            Console.WriteLine(Encoding.ASCII.GetString(clientProxy.ReadBuffer.ReadLast()));
+                        }
+
+                        await Task.Delay(1000);
+                    }
+                    break;
+                }
+            }
         }
     }
 }
