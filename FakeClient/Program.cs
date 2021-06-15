@@ -16,6 +16,8 @@ namespace FakeClient
             var udpClient = new UdpClient(0);
             Console.WriteLine("Client started!");
             var result = await connector.ConnectAsync(udpClient, args[0], int.Parse(args[1]));
+            // Нивелируем наличие нескольких адаптеров.
+            result.Clients[0].PrivateEndPoint.Ip = args[0];
             Console.WriteLine($"Role: {result.Role}");
 
             var holePuncher = new HolePuncher();

@@ -27,7 +27,7 @@ namespace Connectors.HolePuncher
         private HashSet<IPEndPoint> _requesters;
         private List<IPEndPoint> _confirmed;
 
-        public int MaxAttempts { get; set; } = 10;
+        public int MaxAttempts { get; set; } = 20;
 
         public async Task<List<IPEndPoint>> ConnectAsync(
             UdpClient udpClient, 
@@ -63,12 +63,18 @@ namespace Connectors.HolePuncher
 
             if (_udpClient.Available > 0)
             {
-                _currentAttempts = 0;
-
                 while (_udpClient.Available > 0)
                 {
-                    var result = await _udpClient.ReceiveAsync();
-                    ProcessMessage(result.Buffer, result.RemoteEndPoint);
+                    try
+                    {
+                        var result = await _udpClient.ReceiveAsync();
+                        _currentAttempts = 0;
+                        ProcessMessage(result.Buffer, result.RemoteEndPoint);
+                    }
+                    catch (SocketException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                 }
             }
             else
@@ -143,6 +149,11 @@ namespace Connectors.HolePuncher
                         // TODO: лог о неправильном JSON'е?
                     }
                 }
+            }
+            else if (_requesters.Contains(endPoint))
+            {
+                _requesters.Remove(endPoint);
+                _confirmed.Add(endPoint);
             }
         }
 

@@ -48,6 +48,7 @@ namespace FakeListenSession
                         clientsEndPoints.Add(newClientEndPoints);
                     }
 
+                    Console.WriteLine($"Отвечаю: {result.RemoteEndPoint}.");
                     var message = MessageHelper.GetMessage(NetworkMessages.Info);
                     await udpClient.SendAsync(message, message.Length, result.RemoteEndPoint);
                 }

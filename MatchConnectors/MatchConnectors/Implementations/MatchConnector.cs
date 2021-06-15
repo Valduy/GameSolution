@@ -16,7 +16,7 @@ namespace Connectors.MatchConnectors
         private UdpClient _udpClient;
         private CancellationToken _cancellationToken;
 
-        public int MaxAttempts { get; set; } = 10;
+        public int MaxAttempts { get; set; } = 50;
         public string ServerIp { get; private set; }
         public int ServerPort { get; private set; }
         internal string Ip { get; private set; }
