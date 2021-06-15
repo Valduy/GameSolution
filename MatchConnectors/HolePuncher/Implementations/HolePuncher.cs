@@ -108,6 +108,8 @@ namespace Connectors.HolePuncher
 
         private void ProcessMessage(byte[] message, IPEndPoint endPoint)
         {
+            ClientEndPoints client;
+
             if (IsExpected(message))
             {
                 try
@@ -115,26 +117,11 @@ namespace Connectors.HolePuncher
                     var data = ToConnectionMessage(message);
                     if (data.SessionId != _sessionId) return;
 
-                    switch (data.ConnectionAction)
+                    if (data.ConnectionAction == ConnectionAction.Check 
+                        && TryGetFromPotentials(endPoint, out client))
                     {
-                        case ConnectionAction.Check:
-                        {
-                            if (TryGetFromPotentials(endPoint, out var client))
-                            {
-                                _potentials.Remove(client);
-                                _requesters.Add(endPoint);
-                            }
-                            break;
-                        }
-                        case ConnectionAction.Confirm:
-                        {
-                            if (TryGetFromPotentials(endPoint, out var client))
-                            {
-                                _potentials.Remove(client);
-                                _confirmed.Add(endPoint);
-                            }
-                            break;
-                        }
+                        _potentials.Remove(client);
+                        _requesters.Add(endPoint);
                     }
                 }
                 catch (Exception ex)
@@ -145,8 +132,13 @@ namespace Connectors.HolePuncher
                     }
                 }
             }
-            
-            if (_requesters.Contains(endPoint))
+
+            if (TryGetFromPotentials(endPoint, out client))
+            {
+                _potentials.Remove(client);
+                _confirmed.Add(endPoint);
+            }
+            else if (_requesters.Contains(endPoint))
             {
                 _requesters.Remove(endPoint);
                 _confirmed.Add(endPoint);
