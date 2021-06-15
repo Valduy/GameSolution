@@ -133,11 +133,6 @@ namespace Connectors.HolePuncher
                                 _potentials.Remove(client);
                                 _confirmed.Add(endPoint);
                             }
-                            else if (_requesters.Contains(endPoint))
-                            {
-                                _requesters.Remove(endPoint);
-                                _confirmed.Add(endPoint);
-                            }
                             break;
                         }
                     }
@@ -150,7 +145,8 @@ namespace Connectors.HolePuncher
                     }
                 }
             }
-            else if (_requesters.Contains(endPoint))
+            
+            if (_requesters.Contains(endPoint))
             {
                 _requesters.Remove(endPoint);
                 _confirmed.Add(endPoint);
