@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "FakeClient": {
-      "commandName": "Project",
-      "commandLineArgs": "37.112.25.61 8000"
-    }
-  }
-}
