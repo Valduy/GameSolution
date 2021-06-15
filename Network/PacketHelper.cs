@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Network
 {
@@ -19,5 +20,14 @@ namespace Network
 
         public static byte[] GetData(byte[] packet) 
             => BytesHelper.ReadBytes(packet, HeaderSize, packet.Length - HeaderSize);
+
+        public static bool IsShouldCorrectPacketNumber(uint[] numbers, double tolerance) 
+            => Variance(numbers) < tolerance;
+
+        private static double Variance(uint[] numbers)
+        {
+            var average = numbers.Average(n => n);
+            return numbers.Sum(n => Math.Pow(n - average, 2)) / numbers.Length;
+        }
     }
 }

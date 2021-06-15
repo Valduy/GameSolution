@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -9,10 +10,11 @@ namespace Network.Proxy
 {
     public class ClientNetworkProxy
     {
+        public const int HeaderSize = sizeof(uint);
+
         private const int SendBufferSize = 10;
         private const int ReceiveBufferSize = 20;
-
-        public const int HeaderSize = sizeof(uint); 
+        private const int Tolerance = 200;
 
         private readonly UdpClient _udpClient;
 
@@ -22,6 +24,8 @@ namespace Network.Proxy
 
         private uint _sentPacketNumber;
         private uint _receivedPacketNumber;
+        private uint[] _packetNumbersBuffer;
+        private int _pointer;
 
         public IPEndPoint Host { get; }
         public IWriteOnlyNetworkBuffer WriteBuffer => _writeBuffer;
@@ -38,6 +42,7 @@ namespace Network.Proxy
             _tokenSource = new CancellationTokenSource();
             _writeBuffer = new ConcurrentNetworkBuffer(SendBufferSize);
             _readBuffer = new ConcurrentNetworkBuffer(ReceiveBufferSize);
+            _packetNumbersBuffer = new uint[10];
 
             Task.Run(SendLoopAsync, _tokenSource.Token);
             Task.Run(ReceiveLoopAsync, _tokenSource.Token);
@@ -95,7 +100,18 @@ namespace Network.Proxy
                 if (Equals(result.RemoteEndPoint, Host))
                 {
                     var packetNumber = PacketHelper.GetNumber(result.Buffer);
+                    _packetNumbersBuffer[_pointer++] = packetNumber;
 
+                    if (_pointer == _packetNumbersBuffer.Length)
+                    {
+                        _pointer = 0;
+
+                        if (PacketHelper.IsShouldCorrectPacketNumber(_packetNumbersBuffer, Tolerance))
+                        {
+                            _receivedPacketNumber = _packetNumbersBuffer.Min();
+                        }
+                    }
+                    
                     if (packetNumber >= _receivedPacketNumber)
                     {
                         _readBuffer.Write(PacketHelper.GetData(result.Buffer));
