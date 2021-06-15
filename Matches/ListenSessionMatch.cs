@@ -73,16 +73,24 @@ namespace Matches
         { }
 
         public ListenSessionMatch(
+            IEnumerable<ClientEndPoints> playersEndPoints,
+            long timeForStarting,
+            int port,
+            ILogger<ListenSessionMatch> logger = null)
+            : this(playersEndPoints, timeForStarting, new UdpClient(port), logger)
+        { }
+        
+        public ListenSessionMatch(
             IEnumerable<ClientEndPoints> playersEndPoints, 
             long timeForStarting, 
-            int port, 
+            UdpClient udpClient, 
             ILogger<ListenSessionMatch> logger = null)
         {
             SessionId = NextSessionId;
             _logger = logger;
             ExpectedPlayers = playersEndPoints;
             TimeForStarting = timeForStarting;
-            _udpClient = new UdpClient(port);
+            _udpClient = udpClient;
             Port = _udpClient.GetPort();
         }
 
