@@ -38,6 +38,8 @@ namespace FakeClient
                 case Role.Host:
                 {
                     var hostProxy = new HostNetworkProxy(udpClient, endPoints);
+                    hostProxy.Start();
+
                     while (true)
                     {
                         hostProxy.GetWriteBuffer(endPoints[0]).Write(Encoding.ASCII.GetBytes("From host!"));
@@ -55,6 +57,8 @@ namespace FakeClient
                 case Role.Client:
                 {
                     var clientProxy = new ClientNetworkProxy(udpClient, endPoints[0]);
+                    clientProxy.Start();
+
                     while (true)
                     {
                         clientProxy.WriteBuffer.Write(Encoding.ASCII.GetBytes("From client!"));
