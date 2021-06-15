@@ -108,7 +108,7 @@ namespace Connectors.HolePuncher
 
         private void ProcessMessage(byte[] message, IPEndPoint endPoint)
         {
-            if (MessageHelper.GetMessageType(message) == NetworkMessages.Connect)
+            if (IsExpected(message))
             {
                 try
                 {
@@ -175,6 +175,9 @@ namespace Connectors.HolePuncher
                 c => c.PrivateEndPoint.IsSame(endPoint) || c.PublicEndPoint.IsSame(endPoint));
             return client != null;
         }
+
+        private bool IsExpected(byte[] message)
+            => message.Length >= 4 && MessageHelper.GetMessageType(message) == NetworkMessages.Connect;
 
         private bool IsAllConfirmed() => !_potentials.Any() && !_requesters.Any();
     }
