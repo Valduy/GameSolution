@@ -19,8 +19,11 @@ namespace FakeClient
             Console.WriteLine("Client started!");
             var result = await connector.ConnectAsync(udpClient, args[0], int.Parse(args[1]));
             // Нивелируем наличие нескольких адаптеров.
-            result.Clients[0].PrivateEndPoint.Ip = args[0];
+            //result.Clients[0].PrivateEndPoint.Ip = args[0];
             Console.WriteLine($"Role: {result.Role}");
+            Console.WriteLine("Clients:");
+            result.Clients.ForEach(c => Console.WriteLine($"{c.PrivateEndPoint.Ip}:{c.PrivateEndPoint.Port}" +
+                                                          $"/{c.PublicEndPoint.Ip}:{c.PublicEndPoint.Port}"));
 
             var holePuncher = new HolePuncher();
             var endPoints = await holePuncher.ConnectAsync(udpClient, result.SessionId, result.Clients);
