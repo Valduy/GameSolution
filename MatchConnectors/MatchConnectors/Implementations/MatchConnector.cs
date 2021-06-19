@@ -9,14 +9,11 @@ namespace Connectors.MatchConnectors
     public class MatchConnector : IMatchConnector
     {
         private const int LoopDelay = 100;
-        private const int ReceiveTimeout = 100;
 
         private bool _isRun;
-        private int _currentAttempts;
         private UdpClient _udpClient;
         private CancellationToken _cancellationToken;
 
-        public int MaxAttempts { get; set; } = 50;
         public string ServerIp { get; private set; }
         public int ServerPort { get; private set; }
         internal string Ip { get; private set; }
@@ -62,24 +59,10 @@ namespace Connectors.MatchConnectors
         {
             await State.SendMessageAsync();
 
-            if (_udpClient.Available > 0)
+            while (_isRun && _udpClient.Available > 0)
             {
-                _currentAttempts = 0;
-
-                while (_isRun && _udpClient.Available > 0)
-                {
-                    var result = await _udpClient.ReceiveAsync();
-                    State.ProcessMessage(result.Buffer);
-                }
-            }
-            else
-            {
-                _currentAttempts++;
-
-                if (_currentAttempts >= MaxAttempts)
-                {
-                    throw new ConnectorException("Потеряно соединение с сервером.");
-                }
+                var result = await _udpClient.ReceiveAsync();
+                State.ProcessMessage(result.Buffer);
             }
         }
     }
