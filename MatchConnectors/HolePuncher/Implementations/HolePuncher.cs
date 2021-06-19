@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Network;
 using Network.Messages;
-using Newtonsoft.Json;
 
 namespace Connectors.HolePuncher
 {
@@ -16,16 +15,14 @@ namespace Connectors.HolePuncher
         private const int LoopDelay = 1000;
 
         private int _currentAttempts;
-        private byte[] _checkMessage;
-        private byte[] _confirmMessage;
+        private byte[] _packet;
 
         private UdpClient _udpClient;
         private uint _sessionId;
         private CancellationToken _cancellationToken;
 
-        private List<ClientEndPoints> _potentials;
-        private HashSet<IPEndPoint> _requesters;
-        private List<IPEndPoint> _confirmed;
+        private List<ClientEndPoints> _potentials; 
+        private List<IPEndPoint> _connected;
 
         public int MaxAttempts { get; set; } = 20;
 
@@ -39,17 +36,15 @@ namespace Connectors.HolePuncher
             _sessionId = sessionId;
             _cancellationToken = cancellationToken;
             _potentials = new List<ClientEndPoints>(clients);
-            _requesters = new HashSet<IPEndPoint>();
-            _confirmed = new List<IPEndPoint>();
-            _checkMessage = GetConnectionMessage(ConnectionAction.Check);
-            _confirmMessage = GetConnectionMessage(ConnectionAction.Confirm);
+            _connected = new List<IPEndPoint>();
+            _packet = PacketHelper.CreatePacket(_sessionId, 0);
             await ConnectionLoop();
-            return _confirmed;
+            return _connected;
         }
 
         private async Task ConnectionLoop()
         {
-            while (!IsAllConfirmed())
+            while (_potentials.Any())
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 await Task.Delay(LoopDelay, _cancellationToken);
@@ -59,7 +54,7 @@ namespace Connectors.HolePuncher
 
         private async Task ConnectionFrame()
         {
-            await SendMessages();
+            await SendPackets();
 
             if (_udpClient.Available > 0)
             {
@@ -88,78 +83,40 @@ namespace Connectors.HolePuncher
             }
         }
 
-        private async Task SendMessages()
+        private async Task SendPackets()
         {
             foreach (var client in _potentials)
             {
-                await SendMessage(_checkMessage, client.PublicEndPoint);
+                await SendPacket(_packet, client.PublicEndPoint);
 
                 if (!IPAddress.IsLoopback(IPAddress.Parse(client.PublicEndPoint.Ip)))
                 {
-                    await SendMessage(_checkMessage, client.PrivateEndPoint);
+                    await SendPacket(_packet, client.PrivateEndPoint);
                 }
             }
 
-            foreach (var endPoint in _requesters)
+            foreach (var client in _connected)
             {
-                await SendMessage(_confirmMessage, endPoint);
+                await SendPacket(_packet, client);
             }
         }
 
         private void ProcessMessage(byte[] message, IPEndPoint endPoint)
         {
-            ClientEndPoints client;
-
-            if (IsExpected(message))
-            {
-                try
-                {
-                    var data = ToConnectionMessage(message);
-                    if (data.SessionId != _sessionId) return;
-
-                    if (data.ConnectionAction == ConnectionAction.Check 
-                        && TryGetFromPotentials(endPoint, out client))
-                    {
-                        _potentials.Remove(client);
-                        _requesters.Add(endPoint);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    if (ex is JsonReaderException || ex is ArgumentNullException)
-                    {
-                        // TODO: лог о неправильном JSON'е?
-                    }
-                }
-            }
-
-            if (TryGetFromPotentials(endPoint, out client))
+            if (message.Length >= PacketHelper.HeaderSize 
+                && PacketHelper.GetSessionId(message) == _sessionId 
+                && TryGetFromPotentials(endPoint, out var client))
             {
                 _potentials.Remove(client);
-                _confirmed.Add(endPoint);
-            }
-            else if (_requesters.Contains(endPoint))
-            {
-                _requesters.Remove(endPoint);
-                _confirmed.Add(endPoint);
+                _connected.Add(endPoint);
             }
         }
 
-        private async Task SendMessage(byte[] message, ClientEndPoint endPoint) 
+        private async Task SendPacket(byte[] message, ClientEndPoint endPoint) 
             => await _udpClient.SendAsync(message, message.Length, endPoint.Ip, endPoint.Port);
 
-        private async Task SendMessage(byte[] message, IPEndPoint endPoint)
+        private async Task SendPacket(byte[] message, IPEndPoint endPoint)
             => await _udpClient.SendAsync(message, message.Length, endPoint);
-
-        private byte[] GetConnectionMessage(ConnectionAction action) 
-            => MessageHelper.GetMessage(NetworkMessages.Connect, JsonConvert.SerializeObject(new HolePuncherMessage
-            {
-                SessionId = _sessionId,
-                ConnectionAction = action,
-            }));
-
-        private HolePuncherMessage ToConnectionMessage(byte[] message) 
-            => JsonConvert.DeserializeObject<HolePuncherMessage>(MessageHelper.ToString(message));
 
         private bool TryGetFromPotentials(IPEndPoint endPoint, out ClientEndPoints client)
         {
@@ -167,10 +124,5 @@ namespace Connectors.HolePuncher
                 c => c.PrivateEndPoint.IsSame(endPoint) || c.PublicEndPoint.IsSame(endPoint));
             return client != null;
         }
-
-        private bool IsExpected(byte[] message)
-            => message.Length >= 4 && MessageHelper.GetMessageType(message) == NetworkMessages.Connect;
-
-        private bool IsAllConfirmed() => !_potentials.Any() && !_requesters.Any();
     }
 }

@@ -10,8 +10,6 @@ namespace Network.Proxy
 {
     public class ClientNetworkProxy
     {
-        public const int HeaderSize = sizeof(uint);
-
         private const int SendBufferSize = 10;
         private const int ReceiveBufferSize = 20;
         private const int Tolerance = 200;
@@ -27,13 +25,15 @@ namespace Network.Proxy
         private uint[] _packetNumbersBuffer;
         private int _pointer;
 
+        public uint SessionId { get; }
         public IPEndPoint Host { get; }
         public IWriteOnlyNetworkBuffer WriteBuffer => _writeBuffer;
         public IReadOnlyNetworkBuffer ReadBuffer => _readBuffer;
         
-        public ClientNetworkProxy(UdpClient udpClient, IPEndPoint host)
+        public ClientNetworkProxy(UdpClient udpClient, uint sessionId, IPEndPoint host)
         {
             _udpClient = udpClient;
+            SessionId = sessionId;
             Host = host;
         }
 
@@ -70,7 +70,7 @@ namespace Network.Proxy
             while (!_writeBuffer.IsEmpty)
             {
                 var data = _writeBuffer.Read();
-                var packet = PacketHelper.CreatePacket(_sentPacketNumber++, data);
+                var packet = PacketHelper.CreatePacket(SessionId, _sentPacketNumber++, data);
                 await _udpClient.SendAsync(packet, packet.Length, Host);
             }
         }
@@ -99,6 +99,7 @@ namespace Network.Proxy
 
                 if (Equals(result.RemoteEndPoint, Host))
                 {
+                    if (PacketHelper.GetSessionId(result.Buffer) != SessionId) return;
                     var packetNumber = PacketHelper.GetNumber(result.Buffer);
                     _packetNumbersBuffer[_pointer++] = packetNumber;
 

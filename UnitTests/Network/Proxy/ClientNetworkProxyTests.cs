@@ -43,7 +43,7 @@ namespace UnitTests.Network.Proxy
         {
             HostUdpClient = new UdpClient(0);
             ClientUdpClient = new UdpClient(0);
-            ClientProxy = new ClientNetworkProxy(ClientUdpClient,
+            ClientProxy = new ClientNetworkProxy(ClientUdpClient, 0,
                 new IPEndPoint(IPAddress.Loopback, HostUdpClient.GetPort()));
             ClientProxy.Start();
         }
@@ -82,7 +82,7 @@ namespace UnitTests.Network.Proxy
         [ClassData(typeof(MessagesGenerator))]
         public void ReadFromReadBuffer_Messages_SendedMessages(byte[] message)
         {
-            var packet = PacketHelper.CreatePacket(0, message);
+            var packet = PacketHelper.CreatePacket(0, 0, message);
 
             _fixture.HostUdpClient.Send(packet, packet.Length,
                 new IPEndPoint(IPAddress.Loopback, _fixture.ClientUdpClient.GetPort()));

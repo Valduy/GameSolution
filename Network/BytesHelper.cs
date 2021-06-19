@@ -29,6 +29,9 @@ namespace Network
             }
         }
 
+        public static uint ReadUInt32(byte[] source, int offset) 
+            => BitConverter.ToUInt32(source, offset);
+
         public static byte[] ReadBytes(byte[] source, int offset, int count)
         {
             var destination = new byte[count];

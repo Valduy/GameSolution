@@ -24,11 +24,13 @@ namespace Network.Proxy
         private uint _sentPacketNumber;
         private Dictionary<IPEndPoint, (uint MaxNumber, uint[] Buffer, int Pointer)> _packetsInfo;
 
+        public uint SessionId { get; }
         public IEnumerable<IPEndPoint> Clients { get; }
 
-        public HostNetworkProxy(UdpClient udpClient, IEnumerable<IPEndPoint> clients)
+        public HostNetworkProxy(UdpClient udpClient, uint sessionId, IEnumerable<IPEndPoint> clients)
         {
             _udpClient = udpClient;
+            SessionId = sessionId;
             Clients = clients;
         }
 
@@ -75,13 +77,14 @@ namespace Network.Proxy
         {
             foreach (var clientBufferPair in _writeBuffers)
             {
+                var ip = clientBufferPair.Key;
                 var buffer = clientBufferPair.Value;
 
                 while (!buffer.IsEmpty)
                 {
                     var data = buffer.Read();
-                    var packet = PacketHelper.CreatePacket(_sentPacketNumber, data);
-                    await _udpClient.SendAsync(packet, packet.Length, clientBufferPair.Key);
+                    var packet = PacketHelper.CreatePacket(SessionId, _sentPacketNumber, data);
+                    await _udpClient.SendAsync(packet, packet.Length, ip);
                 }
             }
 
@@ -112,6 +115,7 @@ namespace Network.Proxy
 
                 if (_readBuffers.TryGetValue(result.RemoteEndPoint, out var buffer))
                 {
+                    if (PacketHelper.GetSessionId(result.Buffer) != SessionId) return;
                     var packetNumber = PacketHelper.GetNumber(result.Buffer);
                     var packetInfo = _packetsInfo[result.RemoteEndPoint];
                     packetInfo.Buffer[packetInfo.Pointer++] = packetNumber;
