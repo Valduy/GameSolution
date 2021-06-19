@@ -8,7 +8,7 @@ using Network.NetworkBuffers;
 
 namespace Network.Proxy
 {
-    public class ClientNetworkProxy
+    public class ClientNetworkProxy : IClientNetworkProxy
     {
         private const int SendBufferSize = 10;
         private const int ReceiveBufferSize = 20;
@@ -42,8 +42,11 @@ namespace Network.Proxy
             _tokenSource = new CancellationTokenSource();
             _writeBuffer = new ConcurrentNetworkBuffer(SendBufferSize);
             _readBuffer = new ConcurrentNetworkBuffer(ReceiveBufferSize);
+            _sentPacketNumber = 0;
+            _receivedPacketNumber = 0;
+            _pointer = 0;
             _packetNumbersBuffer = new uint[10];
-
+            
             Task.Run(SendLoopAsync, _tokenSource.Token);
             Task.Run(ReceiveLoopAsync, _tokenSource.Token);
         }

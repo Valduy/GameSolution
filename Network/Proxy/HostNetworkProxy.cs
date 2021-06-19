@@ -9,7 +9,7 @@ using Network.NetworkBuffers;
 
 namespace Network.Proxy
 {
-    public class HostNetworkProxy
+    public class HostNetworkProxy : IHostNetworkProxy
     {
         private const int SendBufferSize = 10;
         private const int ReceiveBufferSize = 20;
